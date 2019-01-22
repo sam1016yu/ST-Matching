@@ -5,9 +5,11 @@ function [road_network,road_cells] = splitRoad2Cell(filename,grid_size)
 delimiter = ',';
 formatSpec = '%f%f%f%f%f%f%f%C%[^\n\r]';
 fileID = fopen(filename,'r');
-dataArray = textscan(fileID, formatSpec, 'Delimiter', delimiter, 'TextType', 'string', 'EmptyValue', NaN,  'ReturnOnError', false);
+dataArray = textscan(fileID, formatSpec, 'Delimiter',delimiter, 'TextType',...
+    'string', 'EmptyValue', NaN,  'ReturnOnError', false);
 fclose(fileID);
-road_network_raw = table(dataArray{1:end-1}, 'VariableNames', {'EdgeID','Node1ID','Node2ID','Node1Lon','Node1Lat','Node2Lon','Node2Lat','Type'});
+road_network_raw = table(dataArray{1:end-1}, 'VariableNames', ...
+    {'EdgeID','Node1ID','Node2ID','Node1Lon','Node1Lat','Node2Lon','Node2Lat','Type'});
 clearvars delimiter formatSpec fileID dataArray ans;
 %% cut grids
 % determining 4 points on the edges
@@ -16,13 +18,16 @@ lon_min = min(min(road_network_raw.Node1Lon),min(road_network_raw.Node2Lon));
 lat_max = max(max(road_network_raw.Node1Lat),max(road_network_raw.Node2Lat));
 lat_min = min(min(road_network_raw.Node1Lat),min(road_network_raw.Node2Lat));
 % calculate area size
-area_height = max(distance([lat_max,lon_min],[lat_min,lon_min]),distance([lat_max,lon_max],[lat_min,lon_max]));
-area_width = max(distance([lat_max,lon_max],[lat_max,lon_min]),distance([lat_min,lon_max],[lat_min,lon_min]));
+area_height = max(distance([lat_max,lon_min],[lat_min,lon_min]),...
+    distance([lat_max,lon_max],[lat_min,lon_max]));
+area_width = max(distance([lat_max,lon_max],[lat_max,lon_min]),...
+    distance([lat_min,lon_max],[lat_min,lon_min]));
 area_height = deg2km(area_height);area_width = deg2km(area_width);
 % calculate number of grids
 y_size = ceil(area_height/grid_size);x_size = ceil(area_width/grid_size);
 % lon_vec:grid lines(longitude), lat_vec grid lines(latitude)
-lon_vec = linspace(lon_min,lon_max,x_size); lat_vec = linspace(lat_min,lat_max,y_size);
+lon_vec = linspace(lon_min,lon_max,x_size);
+lat_vec = linspace(lat_min,lat_max,y_size);
 %% find grid 
 roadID = findEdgeIndex(lon_vec,lat_vec,road_network_raw);
 road_cells = table(roadID);
@@ -40,7 +45,7 @@ end
 
 
 function road_cells = findEdgeIndex(lon_vec,lat_vec,road_network_raw)
-%% given gridded network and edge,find whcih grid the edge belong to
+%% given gridded network and edge,find whcih grid edge belong to
 
 % Initialize a waitbar to show progress
 wbh = waitbar(0,'indexing edges...');
@@ -55,7 +60,8 @@ for edges_idx = 1: height(road_network_raw)
     for test_idx = 1:length(test_lon_vec)
         % for each test point, test its position in the lon_vec and lat_vec
         test_lon = test_lon_vec(test_idx);test_lat = test_lat_vec(test_idx);
-        [~,col_lon,~] = find(lon_vec>=test_lon);[~,col_lat,~] = find(lat_vec>=test_lat);
+        [~,col_lon,~] = find(lon_vec>=test_lon);
+        [~,col_lat,~] = find(lat_vec>=test_lat);
         lon_idx = col_lon(1) -1;lat_idx = col_lat(1) -1;
         % deal with special occasion when points overlap edges
         if lon_idx == 0
