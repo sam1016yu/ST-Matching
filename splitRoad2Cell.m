@@ -41,10 +41,12 @@ function road_cells = findEdgeIndex(lon_vec,lat_vec,road_network_raw)
 %% given gidded network and edge,find whcih grid the edge belong to
 wbh = waitbar(0,'indexing edges...');
 road_cells = cell((length(lon_vec)-1) * (length(lat_vec)-1),1);
+cell_width = lon_vec(2)-lon_vec(1);
+cell_height = lat_vec(2)-lat_vec(1);
 for edges_idx = 1: height(road_network_raw)
     edge_index = [];
     edges = road_network_raw(edges_idx,:);
-    [test_lon_vec,test_lat_vec] = divideEdges(edges,lon_vec(2)-lon_vec(1),lat_vec(2)-lat_vec(1));
+    [test_lon_vec,test_lat_vec] = divideEdges(cell_width,cell_height);
     for test_idx = 1:length(test_lon_vec)
         test_lon = test_lon_vec(test_idx);test_lat = test_lat_vec(test_idx);
         [~,col_lon,~] = find(lon_vec>=test_lon);[~,col_lat,~] = find(lat_vec>=test_lat);
