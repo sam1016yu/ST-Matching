@@ -1,4 +1,4 @@
-function [road_network,road_cells] = splitRoad2Cell(filename,grid_size)
+function [road_network,road_cells] = splitRoad2Cell(filename,cell_size)
 % filename: the raw txt file of road network, in required format
 % grid size: the desired grid size (in km)
 %% read raw text file of road network
@@ -24,7 +24,7 @@ area_width = max(distance([lat_max,lon_max],[lat_max,lon_min]),...
     distance([lat_min,lon_max],[lat_min,lon_min]));
 area_height = deg2km(area_height);area_width = deg2km(area_width);
 % calculate number of grids
-y_size = ceil(area_height/grid_size);x_size = ceil(area_width/grid_size);
+y_size = ceil(area_height/cell_size);x_size = ceil(area_width/cell_size);
 % lon_vec:grid lines(longitude), lat_vec grid lines(latitude)
 lon_vec = linspace(lon_min,lon_max,x_size);
 lat_vec = linspace(lat_min,lat_max,y_size);
