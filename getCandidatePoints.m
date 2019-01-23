@@ -14,31 +14,9 @@ function [candidate_points] = getCandidatePoints(lon,lat,road,grid,search_radius
 % locate center grid first
 center_cell_id = find(grid.startLat<=lat & grid.endLat>= lat & ...
     grid.startLon <= lon & grid.endLon >= lon);
-% initialize road ids with edges in the center grid
-road_ids = cell2mat(grid(center_cell_id,:).roadID);
-% consider looking around center grid based on the given search radius and
-% grid size used previously
-grid_rows = grid_size(1);grid_cols = grid_size(2);
-% function that convert between cellId and  [row_id,col_id]
-% convenient for searching surrounding grids
-cell2rowcol = @(cellid) [ceil(cellid/grid_cols), ...
-    mod(cellid,grid_cols)+(mod(cellid,grid_cols)==0)*grid_cols];
-rowcol2cell = @(row,col) grid_cols*(row-1) + col; 
-isValidRowCol = @(row,col) row>0 && row<=grid_rows && col>0 && col <= grid_cols;
 %% search surrounding grids
-center_rowcol = cell2rowcol(center_cell_id);
-center_row = center_rowcol(1); center_col = center_rowcol(2);
 extra_grids_count = ceil(search_radius/cell_size)-1;
-if extra_grids_count > 0
-    for step_col = -extra_grids_count:extra_grids_count
-        for step_row = -extra_grids_count:extra_grids_count
-            if isValidRowCol(center_row+step_row,center_col+step_col)
-                road_ids = [road_ids cell2mat(grid(rowcol2cell(center_row+step_row,center_col+step_col),:).roadID)];
-            end
-        end
-    end
-    road_ids = unique(road_ids);
-end
+road_ids = searchSurroundingGrids(grid_size,center_cell_id,extra_grids_count,grid);
 %% project point to candidate edges to find candidate points
 candidate_edges = road(ismember(road.EdgeID,road_ids),:);
 candidate_points = zeros(height(candidate_edges),2);
