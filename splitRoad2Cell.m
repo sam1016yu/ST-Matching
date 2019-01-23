@@ -1,4 +1,4 @@
-function [road_network,road_cells] = splitRoad2Cell(filename,cell_size)
+function [road_network,road_cells,grid_size] = splitRoad2Cell(filename,cell_size)
 % filename: the raw txt file of road network, in required format
 % grid size: the desired grid size (in km)
 %% read raw text file of road network
@@ -40,7 +40,8 @@ road_cells.endLat = reshape(repmat(lat_vec(2:end),x_size-1,1),[],1);
 %% final output
 road_cells = [road_cells(:,2:end) road_cells(:,1)];
 road_network = road_network_raw([1,4:end],:);
-clearvars -except road_cells road_network
+grid_size = [y_size-1, x_size-1];
+clearvars -except road_cells road_network grid_size
 end
 
 

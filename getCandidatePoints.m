@@ -9,7 +9,7 @@ function [candidate_points] = getCandidatePoints(lon,lat,road,grid,search_radius
 % grid size: m*n array
 % 
 % Output:
-% vectors of longitude and latitude of candidate points
+% vectors of candidate points ,in each row: [lon lat]
 %% search for candidate edges within given grid
 % locate center grid first
 center_cell_id = find(grid.startLat<=lat & grid.endLat>= lat & ...
