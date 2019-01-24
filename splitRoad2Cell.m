@@ -18,11 +18,10 @@ lon_min = min(min(road_network_raw.Node1Lon),min(road_network_raw.Node2Lon));
 lat_max = max(max(road_network_raw.Node1Lat),max(road_network_raw.Node2Lat));
 lat_min = min(min(road_network_raw.Node1Lat),min(road_network_raw.Node2Lat));
 % calculate area size
-area_height = max(distance([lat_max,lon_min],[lat_min,lon_min]),...
-    distance([lat_max,lon_max],[lat_min,lon_max]));
-area_width = max(distance([lat_max,lon_max],[lat_max,lon_min]),...
-    distance([lat_min,lon_max],[lat_min,lon_min]));
-area_height = deg2km(area_height);area_width = deg2km(area_width);
+area_height = max(distance([lat_max,lon_min],[lat_min,lon_min],almanac('earth', 'wgs84')),...
+    distance([lat_max,lon_max],[lat_min,lon_max],almanac('earth', 'wgs84')));
+area_width = max(distance([lat_max,lon_max],[lat_max,lon_min],almanac('earth', 'wgs84')),...
+    distance([lat_min,lon_max],[lat_min,lon_min],almanac('earth', 'wgs84')));
 % calculate number of grids
 y_size = ceil(area_height/cell_size);x_size = ceil(area_width/cell_size);
 % lon_vec:grid lines(longitude), lat_vec grid lines(latitude)
