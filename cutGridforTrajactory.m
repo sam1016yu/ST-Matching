@@ -4,7 +4,7 @@ function [G,node_table] = cutGridforTrajactory(trajactory,road_cells,road_networ
 
 
 if nargin < 5
-    cut_step = 5;  % default cut size
+    cut_step = ceil(min(grid_size) / 10);  % default cut size
 end
 %% convinence function for finding
 findCellByLonLat = @(lon,lat) find(road_cells.startLat<=lat & road_cells.endLat>= lat & ...
