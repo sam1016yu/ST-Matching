@@ -50,7 +50,12 @@ function [path_edges,distance_min] = findShortestPath...
             & road_network.Node2ID == pEnd);
         edge_res_2 = road_network.EdgeID(road_network.Node1ID == pEnd ...
             & road_network.Node2ID == pStart);
-        P_edges(p_idx-1) = [edge_res_1 edge_res_2];
+        matched_edge = [edge_res_1 edge_res_2];
+        % if more than one edge if found, return shortest
+        if length(matched_edge > 1)
+            matched_edge = matched_edge(1);
+        end
+        P_edges(p_idx-1) = matched_edge;
     end
     path_edges = [eStart.EdgeID P_edges eEnd.EdgeID];
     path_edges = unique(path_edges);

@@ -14,8 +14,8 @@ traj_min_lon = min(trajactory.Longitude); traj_max_lon = max(trajactory.Longitud
 traj_min_lat = min(trajactory.Latitude); traj_max_lat = max(trajactory.Latitude);
 
 % corner of grid, two diag items
-top_left_id = findCellByLonLat(traj_min_lon,traj_max_lat);
-bottom_right_id = findCellByLonLat(traj_max_lon,traj_min_lat);
+top_left_id = findCellByLonLat(traj_min_lon,traj_min_lat);
+bottom_right_id = findCellByLonLat(traj_max_lon,traj_max_lat);
 %% add all edges in range
 % function that convert between cellId and  [row_id,col_id]
 % convenient for searching surrounding grids
@@ -43,7 +43,6 @@ node_num = 1;s = zeros(1,height(search_edges)); t = zeros(1,height(search_edges)
 weights = zeros(1,height(search_edges));
 %%
 warning('off','all');
-wbh = waitbar(0,'indexing nodes for graph construction...');
 for edge_idx = 1 : height(search_edges)
     edge = search_edges(edge_idx,:);
     if ~ismember(edge.Node1ID,node_table.nodeID)
@@ -62,11 +61,7 @@ for edge_idx = 1 : height(search_edges)
     end
     s(edge_idx) = node1Graph;t(edge_idx) = node2Graph;
     weights(edge_idx) = distance(edge.Node1Lat,edge.Node1Lon,edge.Node2Lat,edge.Node2Lon,almanac('earth', 'wgs84'));
-    waitbar(edge_idx/height(search_edges),wbh);
 end
-warning('on','all');
 %%
-waitbar(0.99,wbh,"Construction Graph...");
 G = graph(s,t,weights);
-close(wbh);
 end

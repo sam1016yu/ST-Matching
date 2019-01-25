@@ -7,7 +7,7 @@ function [road_ids,candidate_points] = getCandidatePoints(lon,lat,road_network,r
 % search_radius: the radius(km) within which candidate points are selected
 % cell size: size of cutted cell in grid
 % grid size: m*n array
-% 
+%
 % Output:
 % vectors of candidate points ,in each row: [lon lat]
 %% search for candidate edges within given grid
@@ -29,7 +29,7 @@ function [candidate] = project2Line(lon,lat,edge)
 % see detail in:
 % http://blog.sina.com.cn/s/blog_5d5c80840101bnhw.html
 % http://s3.sinaimg.cn/orignal/5d5c8084gd638da294362&690
-a = [edge.Node1Lon edge.Node1Lat]; 
+a = [edge.Node1Lon edge.Node1Lat];
 b = [edge.Node2Lon edge.Node2Lat];
 p = [lon lat];
 ap = p-a; ab = b-a; r = sum(ap.*ab)/sum(ab.^2);
@@ -43,7 +43,7 @@ end
 end
 
 function [road_ids] = searchSurroundingGrids(grid_size,center_cell_id,search_steps,grid)
-%searchSurroundingGrids 
+%searchSurroundingGrids
 %   search surrounding edges for candidate edges
 %   Input:
 %   grid_size: m*n array
@@ -58,7 +58,7 @@ grid_cols = grid_size(2);grid_rows = grid_size(1);
 % convenient for searching surrounding grids
 cell2rowcol = @(cellid) [ceil(cellid/grid_cols), ...
     mod(cellid,grid_cols)+(mod(cellid,grid_cols)==0)*grid_cols];
-rowcol2cell = @(row,col) grid_cols*(row-1) + col; 
+rowcol2cell = @(row,col) grid_cols*(row-1) + col;
 isValidRowCol = @(row,col) row>0 && row<=grid_rows && col>0 && col <= grid_cols;
 
 road_ids = cell2mat(grid(center_cell_id,:).roadID)';
@@ -77,14 +77,17 @@ elseif any(road_ids)
     road_ids = unique(road_ids);
 else
     search_steps = 1;
-      for step_col = -search_steps:search_steps
-        for step_row = -search_steps:search_steps
-            if isValidRowCol(center_row+step_row,center_col+step_col)
-                road_ids = [road_ids cell2mat(grid(rowcol2cell(center_row+step_row,center_col+step_col),:).roadID)];
+    while ~any(road_ids)
+        for step_col = -search_steps:search_steps
+            for step_row = -search_steps:search_steps
+                if isValidRowCol(center_row+step_row,center_col+step_col)
+                    road_ids = [road_ids cell2mat(grid(rowcol2cell(center_row+step_row,center_col+step_col),:).roadID)];
+                end
             end
         end
+        road_ids = unique(road_ids)';
+        search_steps = search_steps + 1;
     end
-    road_ids = unique(road_ids)';
 end
 end
 

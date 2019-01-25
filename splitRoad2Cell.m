@@ -48,15 +48,16 @@ function road_cells = findEdgeIndex(lon_vec,lat_vec,road_network_raw)
 %% given gridded network and edge,find whcih grid edge belong to
 
 % Initialize a waitbar to show progress
-wbh = waitbar(0,'indexing edges...');
+% wbh = waitbar(0,'indexing edges...');
 road_cells = cell((length(lon_vec)-1) * (length(lat_vec)-1),1);
 % since linspace() is used, cell width and height are identical
 cell_width = lon_vec(2)-lon_vec(1);cell_height = lat_vec(2)-lat_vec(1);
 for edges_idx = 1: height(road_network_raw)
-    edge_index = [];
+    fprintf('Indexing edges %i of %i to cut grid\n',edges_idx,height(road_network_raw));
     edges = road_network_raw(edges_idx,:);
     % for a given edge, call divideEdges() to generate test points
     [test_lon_vec,test_lat_vec] = divideEdges(edges,cell_width,cell_height);
+    edge_index = zeros(1,length(test_lon_vec));
     for test_idx = 1:length(test_lon_vec)
         % for each test point, test its position in the lon_vec and lat_vec
         test_lon = test_lon_vec(test_idx);test_lat = test_lat_vec(test_idx);
@@ -74,7 +75,7 @@ for edges_idx = 1: height(road_network_raw)
         grid_index = lon_idx + (length(lon_vec)-1)*(lat_idx -1 );
         assert(grid_index > 0);
         % store into corresponding edges
-        edge_index = [edge_index grid_index];
+        edge_index(test_idx) = grid_index;
     end
     % different test points can lie in the same grid,need to remove
     % duplicate
@@ -91,9 +92,9 @@ for edges_idx = 1: height(road_network_raw)
         end
     end
     % update waitbar
-    waitbar(edges_idx/height(road_network_raw),wbh);
+%     waitbar(edges_idx/height(road_network_raw),wbh);
 end
-close(wbh);
+% close(wbh);
 end
 
 
@@ -113,10 +114,11 @@ function [test_lon,test_lat] = divideEdges(edges,lon_grid,lat_grid)
     test_lon = [edges.Node1Lon,edges.Node2Lon];
     test_lat = [edges.Node1Lat,edges.Node2Lat];
     if span > 1
+        test_lon = [test_lon zeros(1,span-1)];
         for idx = 1:span-1
             por = idx/(span-idx);
-            test_lon = [test_lon porDiv(por,edges.Node1Lon,edges.Node2Lon)];
-            test_lat = [test_lat porDiv(por,edges.Node1Lat,edges.Node2Lat)];
+            test_lon(2+idx) = porDiv(por,edges.Node1Lon,edges.Node2Lon);
+            test_lat(2+idx) = porDiv(por,edges.Node1Lat,edges.Node2Lat);
         end
     end
     test_lon = sort(test_lon); test_lat = sort(test_lat);
