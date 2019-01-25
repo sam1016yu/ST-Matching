@@ -1,12 +1,12 @@
 clear;clc;
 %% cutting road network to grid
-roadnetworkfilename = 'C:\Users\MiaoYu\Documents\我的坚果云\时空轨迹数据_FiveCities\BeijingCity\RoadNetwork_Beijing.txt';
+roadnetworkfilename = 'RoadNetwork_Beijing.txt';
 cell_size = 0.1;
 [road_network,road_cells,grid_size] = splitRoad2Cell(roadnetworkfilename, cell_size);
 % load('road&cell.mat');grid_size = [747 924];
 fprintf('Indexing grids done!\n');
 %% splitting GPS trajactories
-gpsfilename = 'C:\Users\MiaoYu\Documents\我的坚果云\时空轨迹数据_FiveCities\BeijingCity\GPS_Beijing.txt';
+gpsfilename = 'GPS_Beijing.txt';
 raw_gps_points = splitGPS2line(gpsfilename, 6, 5);
 % load('GPS_Points.mat')
 fprintf('Load GPS points done!\n');
@@ -31,3 +31,4 @@ for traj_idx = 1:length(trajactory_tags)
     trajactory.MatchedLon(traj_loc) = result(:,1);
     trajactory.MatchedLat(traj_loc) = result(:,2);
 end
+save match_result.mat trajactory
