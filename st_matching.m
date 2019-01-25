@@ -2,14 +2,12 @@ clear;clc;
 %% cutting road network to grid
 roadnetworkfilename = 'C:\Users\MiaoYu\Documents\我的坚果云\时空轨迹数据_FiveCities\BeijingCity\RoadNetwork_Beijing.txt';
 cell_size = 0.1;
-[road_network,road_cells,grid_size] = splitRoad2Cell(roadnetworkfilename, cell_size);
-% load('road&cell.mat');grid_size = [74 92];
+% [road_network,road_cells,grid_size] = splitRoad2Cell(roadnetworkfilename, cell_size);
+load('road&cell.mat');grid_size = [747 924];
 %% splitting GPS trajactories
-% gpsfilename = 'C:\Users\MiaoYu\Documents\我的坚果云\时空轨迹数据_FiveCities\BeijingCity\GPS_Beijing.txt';
+gpsfilename = 'C:\Users\MiaoYu\Documents\我的坚果云\时空轨迹数据_FiveCities\BeijingCity\GPS_Beijing.txt';
 % raw_gps_points = splitGPS2line(gpsfilename, 6, 5);
 load('GPS_Points.mat')
-raw_gps_points = GPSBeijing;
-clear GPSBeijing
 %% fetching GPS candidate points
 % single trajactories
 search_radius = 0.1;
@@ -28,6 +26,7 @@ end
 clearvars candPoints lat lon point_idx roadnetworkfilename row_can
 %%
 [G,node_table] = cutGridforTrajactory(trajactory,road_cells,road_network,grid_size);
+% load('graph&node.mat');
 %% Find matched sequence start
 
 %first round
@@ -88,7 +87,7 @@ result_list = zeros(sample_idx,2);
 cur = cand_points_cur(cur_col,:);
 for s_idx = sample_idx:-1:2
     result_list(s_idx,:) = cur;
-    par_loc = find(parent_table.sample_idx == s_idx && parent_table.candidate_idx == cur_col);
+    par_loc = find(parent_table.sample_idx == s_idx & parent_table.candidate_idx == cur_col);
     cur = cell2mat(parent_table.parent(par_loc));
     cur_col = parent_table.parent_idx(par_loc);
 end
