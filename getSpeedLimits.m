@@ -1,9 +1,9 @@
-function [speed_limits] = getSpeedLimits(road_network)
+function [speed_limits] = getSpeedLimits(road_types)
 %Get speed limit of each road type
-    road_types = road_network.Type;
-    speed_limits = zeros(size(road_types)');
+    speed_limits = zeros(size(road_types));
+    speed_limits = speed_limits';
     for type_idx = 1:length(road_types)
-        speed_limits(type_idx) = type2limit(road_type(type_idx));
+        speed_limits(type_idx) = type2limit(road_types(type_idx));
     end
 end
 
