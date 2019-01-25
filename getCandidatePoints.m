@@ -38,7 +38,7 @@ if r <= 0
 elseif r>=1
     candidate = b;
 else
-    candidate = r*ab - a;
+    candidate = r*ab + a;
 end
 end
 
@@ -61,7 +61,7 @@ cell2rowcol = @(cellid) [ceil(cellid/grid_cols), ...
 rowcol2cell = @(row,col) grid_cols*(row-1) + col; 
 isValidRowCol = @(row,col) row>0 && row<=grid_rows && col>0 && col <= grid_cols;
 
-road_ids = [];
+road_ids = cell2mat(grid(center_cell_id,:).roadID)';
 center_rowcol = cell2rowcol(center_cell_id);
 center_row = center_rowcol(1); center_col = center_rowcol(2);
 if search_steps > 0
@@ -73,8 +73,18 @@ if search_steps > 0
         end
     end
     road_ids = unique(road_ids)';
+elseif any(road_ids)
+    road_ids = unique(road_ids);
 else
-    road_ids = cell2mat(grid(center_cell_id,:).roadID)';
+    search_steps = 1;
+      for step_col = -search_steps:search_steps
+        for step_row = -search_steps:search_steps
+            if isValidRowCol(center_row+step_row,center_col+step_col)
+                road_ids = [road_ids cell2mat(grid(rowcol2cell(center_row+step_row,center_col+step_col),:).roadID)];
+            end
+        end
+    end
+    road_ids = unique(road_ids)';
 end
 end
 
