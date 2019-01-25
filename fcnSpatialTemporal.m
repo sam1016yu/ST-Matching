@@ -26,16 +26,6 @@ dist_actual = distance(fliplr(ptn0_raw),fliplr(ptn1_raw),almanac('earth', 'wgs84
 Fs = Ncs*dist_actual/dist_shortest;
 end
 
-function Np = fcnNormal(ptn_cand,ptn_raw)
-%fcnNormal: calculation of observation probablity of a given candidate
-%point
-% Input: ptn_cand: candidate points [lon lat]
-%        ptn_raw:  GPS point[lon lat]
-%%
-mu = 0; sigma = 20/1000;
-dist = distance(fliplr(ptn_cand),fliplr(ptn_raw),almanac('earth', 'wgs84'));
-Np = exp((dist-mu)^2/(2*sigma^2))/(sqrt(2*pi)*sigma);
-end
 
 function Ft = fcnTemporal(delta_t,path_edges,dist_min,road_network)
     avg_speed = dist_min / delta_t * 60 * 60;
