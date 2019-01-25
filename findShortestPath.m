@@ -40,9 +40,7 @@ function [path_edges,distance_min] = findShortestPath...
         distance(fliplr(pStart),fliplr(p_start),almanac('earth', 'wgs84')) ...
         + distance(fliplr(pEnd),fliplr(p_end), almanac('earth', 'wgs84'));
     %%
-    
     P_edges = zeros(1,length(P)-1);
-    
     for p_idx = 2:length(P)
         edge_res_1 = [];edge_res_2 = [];
         pStart = P(p_idx-1);pEnd = P(p_idx);
@@ -55,4 +53,5 @@ function [path_edges,distance_min] = findShortestPath...
         P_edges(p_idx-1) = [edge_res_1 edge_res_2];
     end
     path_edges = [eStart.EdgeID P_edges eEnd.EdgeID];
+    path_edges = unique(path_edges);
 end
