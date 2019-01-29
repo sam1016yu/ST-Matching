@@ -9,3 +9,5 @@ https://www.microsoft.com/en-us/research/publication/map-matching-for-low-sampli
 ![Algorithm 2,find matched sequence](
         findMatchedSequence.PNG
       )
+## Entry point:
+st-matching.m
