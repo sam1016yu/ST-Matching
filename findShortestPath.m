@@ -36,6 +36,7 @@ function [path_edges,distance_min] = findShortestPath...
     % shortest distance is found between the tail node of start edge and
     % head node of end edge
     [P,d] = shortestpath(G,graphNode_start,graphNode_end);
+    
     distance_min = d + ...
         distance(fliplr(pStart),fliplr(p_start),almanac('earth', 'wgs84')) ...
         + distance(fliplr(pEnd),fliplr(p_end), almanac('earth', 'wgs84'));
@@ -59,4 +60,5 @@ function [path_edges,distance_min] = findShortestPath...
     end
     path_edges = [eStart.EdgeID P_edges eEnd.EdgeID];
     path_edges = unique(path_edges);
+    assert(d<Inf, 'shortestPath:noPath','Could not find a path between candidate points!');
 end

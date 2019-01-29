@@ -2,11 +2,13 @@ function [result_list] = matchTrajactory(G,node_table,trajactory,road_network)
 
 %% Find matched sequence start
 %first round
+assert(height(trajactory)>1,'A trajactory need to be more than one point!');
 cand_points_prev = cell2mat(trajactory.CandidatePoints(1));
 cand_edges_prev = cell2mat(trajactory.CandidateEdges(1));
 sample_point_prev = [trajactory.Longitude(1) trajactory.Latitude(1)];
-f_prev = zeros(1,length(cand_points_prev));
-for cand_idx = 1 : length(cand_points_prev)
+[cand_points_prev_row,~] = size(cand_points_prev);
+f_prev = zeros(1,cand_points_prev_row);
+for cand_idx = 1 : cand_points_prev_row
     f_prev(cand_idx) = fcnNormal(cand_points_prev(cand_idx,:),sample_point_prev);
 end
 %% second round search
@@ -19,7 +21,8 @@ for sample_idx = 2:height(trajactory)
         trajactory.Latitude(sample_idx)];
     cand_points_cur = cell2mat(trajactory.CandidatePoints(sample_idx));
     cand_edges_cur = cell2mat(trajactory.CandidateEdges(sample_idx));
-    f_cur = zeros(1,length(cand_points_cur));
+    [cand_points_cur_row,~] = size(cand_points_cur);
+    f_cur = zeros(1,cand_points_cur_row); 
 %     wbh_calc = waitbar(0,'Caluculating Scores for this edge');
     warning('off','all');
     for idx_cur = 1 : length(f_cur)
@@ -53,6 +56,7 @@ warning('on','all');
 %% search finished,start adding results
 result_list = zeros(sample_idx,2);
 [~,cur_col] = find(f_cur == max(f_cur));
+cur_col = cur_col(1);
 cur = cand_points_cur(cur_col,:);
 for s_idx = sample_idx:-1:2
     result_list(s_idx,:) = cur;

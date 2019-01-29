@@ -1,4 +1,4 @@
-function [road_ids,candidate_points] = getCandidatePoints(lon,lat,road_network,road_cells,search_radius,cell_size, grid_size)
+function [road_ids,candidate_points] = getCandidatePoints(lon,lat,road_network,road_cells,search_radius,cell_size, grid_size,top_k)
 %find candidate points within radius r
 % Parameters:
 % lon,lat: longitude and latitude of the point to be searched
@@ -10,6 +10,10 @@ function [road_ids,candidate_points] = getCandidatePoints(lon,lat,road_network,r
 %
 % Output:
 % vectors of candidate points ,in each row: [lon lat]
+
+if nargin < 8
+    top_k = 5;
+end
 %% search for candidate edges within given grid
 % locate center grid first
 center_cell_id = find(road_cells.startLat<=lat & road_cells.endLat>= lat & ...
@@ -22,6 +26,15 @@ candidate_edges = road_network(ismember(road_network.EdgeID,road_ids),:);
 candidate_points = zeros(height(candidate_edges),2);
 for edge_idx = 1 : height(candidate_edges)
     candidate_points(edge_idx,:) = project2Line(lon,lat,candidate_edges(edge_idx,:));
+end
+[row_p,~] = size(candidate_points);
+if row_p > top_k
+    points = mat2cell(candidate_points,ones(1,row_p)); res_table = table(points,road_ids);
+    res_table.distance = distance(fliplr(cell2mat(res_table.points)),repmat([lat lon],row_p,[]));
+    res_table.distance = deg2km(res_table.distance);
+    res_table = sortrows(res_table,{'distance'},{'ascend'});
+    candidate_points = cell2mat(res_table.points(1:top_k));
+    road_ids = res_table.road_ids(1:top_k);
 end
 end
 
