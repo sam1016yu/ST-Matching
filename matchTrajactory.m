@@ -1,7 +1,8 @@
 function [result_list] = matchTrajactory(G,node_table,trajactory,road_network)
 
-%% Find matched sequence start
-%first round
+% Find matched sequence
+% see 'findMatchedSquence.png' for detail
+%% first round
 assert(height(trajactory)>1,'A trajactory need to be more than one point!');
 cand_points_prev = cell2mat(trajactory.CandidatePoints(1));
 cand_edges_prev = cell2mat(trajactory.CandidateEdges(1));
@@ -9,6 +10,7 @@ sample_point_prev = [trajactory.Longitude(1) trajactory.Latitude(1)];
 [cand_points_prev_row,~] = size(cand_points_prev);
 f_prev = zeros(1,cand_points_prev_row);
 for cand_idx = 1 : cand_points_prev_row
+    % initialize first round scores with fcnNormal
     f_prev(cand_idx) = fcnNormal(cand_points_prev(cand_idx,:),sample_point_prev);
 end
 %% second round search
@@ -23,7 +25,6 @@ for sample_idx = 2:height(trajactory)
     cand_edges_cur = cell2mat(trajactory.CandidateEdges(sample_idx));
     [cand_points_cur_row,~] = size(cand_points_cur);
     f_cur = zeros(1,cand_points_cur_row); 
-%     wbh_calc = waitbar(0,'Caluculating Scores for this edge');
     warning('off','all');
     for idx_cur = 1 : length(f_cur)
         cur_max = -Inf;
@@ -43,12 +44,10 @@ for sample_idx = 2:height(trajactory)
                 parent_table.candidate_idx(parent_loc) = idx_cur;
                 parent_table.parent(parent_loc) = mat2cell(cand_points_prev(idx_prev,:),1);
                 parent_table.parent_idx(parent_loc) = idx_prev;
-%                 waitbar((idx_prev+(idx_cur-1)*length(f_prev))/(length(f_prev)*length(f_cur)),wbh_calc);
             end
             f_cur(idx_cur) = cur_max; 
         end
     end
-%     close(wbh_calc);
     cand_points_prev = cand_points_cur;cand_edges_prev = cand_edges_cur;
     sample_point_prev = sample_point_cur;f_prev = f_cur;
 end

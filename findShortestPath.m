@@ -15,7 +15,9 @@ function [path_edges,distance_min] = findShortestPath...
     vecEdge1 = [eStart.Node2Lon eStart.Node2Lat] - [eStart.Node1Lon eStart.Node1Lat];
     vecEdge2 = [eEnd.Node2Lon eEnd.Node2Lat] - [eEnd.Node1Lon eEnd.Node1Lat];
     cross2 = @(vec1,vec2) sum(vec1.*vec2); % cross product for 2-d vector
-    
+    % comparing direction vectors to determine head and tail node of 
+    % each edge.
+    % directly adding node in graph may be harmful and logically incorrect
     if cross2(vecPoints,vecEdge1) >= 0
         eStart_tail = Node2Start;
         p_start = [eStart.Node2Lon eStart.Node2Lat];
@@ -30,17 +32,17 @@ function [path_edges,distance_min] = findShortestPath...
         eEnd_head = Node2End;
         p_end = [eEnd.Node2Lon eEnd.Node2Lat];
     end
-    %%
+    %% starting and ending node of path search
     graphNode_start = node_table.nodeGraph(node_table.nodeID == eStart_tail);
     graphNode_end = node_table.nodeGraph(node_table.nodeID == eEnd_head);
     % shortest distance is found between the tail node of start edge and
     % head node of end edge
     [P,d] = shortestpath(G,graphNode_start,graphNode_end);
-    
+    % total distance calculation
     distance_min = d + ...
         distance(fliplr(pStart),fliplr(p_start),almanac('earth', 'wgs84')) ...
         + distance(fliplr(pEnd),fliplr(p_end), almanac('earth', 'wgs84'));
-    %%
+    %% adding edges passed according to the path found
     P_edges = zeros(1,length(P)-1);
     for p_idx = 2:length(P)
         edge_res_1 = [];edge_res_2 = [];
@@ -52,7 +54,7 @@ function [path_edges,distance_min] = findShortestPath...
         edge_res_2 = road_network.EdgeID(road_network.Node1ID == pEnd ...
             & road_network.Node2ID == pStart);
         matched_edge = [edge_res_1 edge_res_2];
-        % if more than one edge if found, return shortest
+        % if more than one edge if found, return only one
         if length(matched_edge > 1)
             matched_edge = matched_edge(1);
         end
@@ -60,5 +62,7 @@ function [path_edges,distance_min] = findShortestPath...
     end
     path_edges = [eStart.EdgeID P_edges eEnd.EdgeID];
     path_edges = unique(path_edges);
+    % d = Inf means no path!
+    % not sure of the reason yet
     assert(d<Inf, 'shortestPath:noPath','Could not find a path between candidate points!');
 end

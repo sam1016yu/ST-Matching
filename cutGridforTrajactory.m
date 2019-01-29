@@ -2,10 +2,6 @@ function [G,node_table] = cutGridforTrajactory(trajactory,road_cells,road_networ
 % for a given trajactory, find the area to search for shortest path.
 % need to cut the grid so that only a portion of graph is used to search
 
-
-if nargin < 5
-    cut_step = ceil(min(grid_size) / 10);  % default cut size
-end
 %% convinence function for finding
 findCellByLonLat = @(lon,lat) find(road_cells.startLat<=lat & road_cells.endLat>= lat & ...
     road_cells.startLon <= lon & road_cells.endLon >= lon);
@@ -16,11 +12,13 @@ traj_min_lat = min(trajactory.Latitude); traj_max_lat = max(trajactory.Latitude)
 % corner of grid, two diag items
 top_left_id = findCellByLonLat(traj_min_lon,traj_min_lat);
 bottom_right_id = findCellByLonLat(traj_max_lon,traj_max_lat);
+
 %% add all edges in range
 % function that convert between cellId and  [row_id,col_id]
 % convenient for searching surrounding grids
 grid_cols = grid_size(2);grid_rows = grid_size(1);
 
+%% convinence function for converting index
 cell2rowcol = @(cellid) [ceil(cellid/grid_cols), ...
     mod(cellid,grid_cols)+(mod(cellid,grid_cols)==0)*grid_cols];
 rowcol2cell = @(row,col) grid_cols*(row-1) + col; 
@@ -29,6 +27,14 @@ isValidRowCol = @(row,col) row>0 && row<=grid_rows && col>0 && col <= grid_cols;
 road_ids = [];
 % start adding:
 top_left_rowcol = cell2rowcol(top_left_id); bottom_right_rowcol = cell2rowcol(bottom_right_id);
+
+x_span = abs(bottom_right_rowcol(2) - top_left_rowcol(2));
+y_span = abs(bottom_right_rowcol(1) - top_left_rowcol(1));
+if nargin < 5
+    % default cut size，half of search span
+    cut_step = ceil(min(x_span,y_span)/2); 
+end
+% add road in range to cell
 for col = (top_left_rowcol(2) - cut_step) : (bottom_right_rowcol(2) + cut_step)
     for row = (top_left_rowcol(1) - cut_step) : (bottom_right_rowcol(1) + cut_step)
         if isValidRowCol(row,col)
@@ -41,7 +47,7 @@ search_edges = road_network(ismember(road_network.EdgeID,road_ids),:);
 node_table = table; node_table.nodeID = zeros(0);node_table.nodeGraph = zeros(0);
 node_num = 1;s = zeros(1,height(search_edges)); t = zeros(1,height(search_edges));
 weights = zeros(1,height(search_edges));
-%%
+%% building relationship between actual nodeID and the node ID in graph
 warning('off','all');
 for edge_idx = 1 : height(search_edges)
     edge = search_edges(edge_idx,:);
@@ -62,6 +68,6 @@ for edge_idx = 1 : height(search_edges)
     s(edge_idx) = node1Graph;t(edge_idx) = node2Graph;
     weights(edge_idx) = distance(edge.Node1Lat,edge.Node1Lon,edge.Node2Lat,edge.Node2Lon,almanac('earth', 'wgs84'));
 end
-%%
+%% buding graph
 G = graph(s,t,weights);
 end

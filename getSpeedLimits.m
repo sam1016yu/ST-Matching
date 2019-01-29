@@ -8,7 +8,8 @@ function [speed_limits] = getSpeedLimits(road_types)
 end
 
 function speed_limit = type2limit(rtype)
-%https://wiki.openstreetmap.org/wiki/OSM_tags_for_routing/Maxspeed
+% https://wiki.openstreetmap.org/wiki/OSM_tags_for_routing/Maxspeed
+% country specific. no standards for china yet
 switch rtype
     case '#'
         speed_limit = 40;
