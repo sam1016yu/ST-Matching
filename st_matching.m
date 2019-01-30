@@ -3,6 +3,7 @@ clear;clc;
 roadnetworkfilename = 'RoadNetwork_Beijing.txt';
 cell_size = 0.1;
 [road_network,road_cells,grid_size] = splitRoad2Cell(roadnetworkfilename, cell_size);
+save road&cell.mat road_cells road_network cell_size grid_size
 % load('road&cell.mat');grid_size = [747 924];
 fprintf('Indexing grids done!\n');
 %% splitting GPS trajactories
