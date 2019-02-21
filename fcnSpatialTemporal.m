@@ -1,4 +1,4 @@
-function F = fcnSpatialTemporal(ptn0_cand,ptn1_cand,ptn0_raw,ptn1_raw,delta_t,edg0_cand,edg1_cand,G,node_table,road_network)
+function [F,path_edges] = fcnSpatialTemporal(ptn0_cand,ptn1_cand,ptn0_raw,ptn1_raw,delta_t,edg0_cand,edg1_cand,G,node_table,road_network)
 %fcnSpatial:spatial analysis function
 %   Implementation of equation 3 in the paper
 %   Input:
@@ -13,7 +13,7 @@ try
     F = Fs * Ft;
 catch ME
     if strcmp(ME.identifier,'shortestPath:noPath')
-        F = -Inf;
+        F = -Inf;path_edges = [];
     else
         rethrow(ME)
     end
@@ -30,7 +30,7 @@ function Fs = fcnSpatial(ptn1_cand,ptn0_raw,ptn1_raw,dist_shortest)
 %%
 Ncs = fcnNormal(ptn1_cand,ptn1_raw);
 % distance between two GPS points
-dist_actual = distance(fliplr(ptn0_raw),fliplr(ptn1_raw),almanac('earth', 'wgs84'));
+dist_actual = deg2km(distance(fliplr(ptn0_raw),fliplr(ptn1_raw)));
 Fs = Ncs*dist_actual/dist_shortest;
 end
 

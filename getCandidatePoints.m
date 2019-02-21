@@ -24,9 +24,13 @@ road_ids = searchSurroundingGrids(grid_size,center_cell_id,extra_grids_count,roa
 %% project point to candidate edges to find candidate points
 candidate_edges = road_network(ismember(road_network.EdgeID,road_ids),:);
 candidate_points = zeros(height(candidate_edges),2);
+road_ids = candidate_edges.EdgeID;
+% figure;
 for edge_idx = 1 : height(candidate_edges)
     candidate_points(edge_idx,:) = project2Line(lon,lat,candidate_edges(edge_idx,:));
 end
+% hold off;
+% close all;
 [row_p,~] = size(candidate_points);
 if row_p > top_k
     points = mat2cell(candidate_points,ones(1,row_p)); res_table = table(points,road_ids);
@@ -53,6 +57,9 @@ elseif r>=1
 else
     candidate = r*ab + a;
 end
+% cla;hold on;
+% plot([a(1),b(1)],[a(2),b(2)],'o-');plot(candidate(1),candidate(2),'x');
+% hold off;
 end
 
 function [road_ids] = searchSurroundingGrids(grid_size,center_cell_id,search_steps,grid)

@@ -24,50 +24,52 @@ cell2rowcol = @(cellid) [ceil(cellid/grid_cols), ...
 rowcol2cell = @(row,col) grid_cols*(row-1) + col; 
 isValidRowCol = @(row,col) row>0 && row<=grid_rows && col>0 && col <= grid_cols;
 
-road_ids = [];
+road_ids = containers.Map('KeyType','double','ValueType','double');
 % start adding:
 top_left_rowcol = cell2rowcol(top_left_id); bottom_right_rowcol = cell2rowcol(bottom_right_id);
 
-x_span = abs(bottom_right_rowcol(2) - top_left_rowcol(2));
-y_span = abs(bottom_right_rowcol(1) - top_left_rowcol(1));
-if nargin < 5
-    % default cut size，half of search span
-    cut_step = ceil(min(x_span,y_span)/2); 
-end
 % add road in range to cell
 for col = (top_left_rowcol(2) - cut_step) : (bottom_right_rowcol(2) + cut_step)
     for row = (top_left_rowcol(1) - cut_step) : (bottom_right_rowcol(1) + cut_step)
         if isValidRowCol(row,col)
-            road_ids = [road_ids cell2mat(road_cells(rowcol2cell(row,col),:).roadID)];
+            roads_to_add = road_cells.roadID{rowcol2cell(row,col)};
+            if ~isempty(roads_to_add)
+                for road_idx = 1:length(roads_to_add)
+                    road_id = roads_to_add(road_idx);
+                    road_ids(road_id) = 1;
+                end
+            end
         end
     end
 end
-road_ids = unique(road_ids);
+road_ids = cell2mat(keys(road_ids));
 search_edges = road_network(ismember(road_network.EdgeID,road_ids),:);
-node_table = table; node_table.nodeID = zeros(0);node_table.nodeGraph = zeros(0);
+node_map = containers.Map('KeyType','double','ValueType','double');
 node_num = 1;s = zeros(1,height(search_edges)); t = zeros(1,height(search_edges));
 weights = zeros(1,height(search_edges));
 %% building relationship between actual nodeID and the node ID in graph
 warning('off','all');
 for edge_idx = 1 : height(search_edges)
     edge = search_edges(edge_idx,:);
-    if ~ismember(edge.Node1ID,node_table.nodeID)
-        node_table.nodeID(node_num) = edge.Node1ID;node_table.nodeGraph(node_num) = node_num;
+    if ~isKey(node_map,edge.Node1ID)
+        node_map(edge.Node1ID) = node_num;
         node1Graph = node_num;
         node_num = node_num + 1;
     else
-        node1Graph = node_table.nodeGraph(node_table.nodeID == edge.Node1ID);
+        node1Graph = node_map(edge.Node1ID);
     end
-    if ~ismember(edge.Node2ID,node_table.nodeID)
-        node_table.nodeID(node_num) = edge.Node2ID;node_table.nodeGraph(node_num) = node_num;
+    if ~isKey(node_map,edge.Node2ID)
+        node_map(edge.Node2ID) = node_num;
         node2Graph = node_num;
         node_num = node_num + 1;
     else
-        node2Graph = node_table.nodeGraph(node_table.nodeID == edge.Node2ID);
+        node2Graph = node_map(edge.Node2ID);
     end
     s(edge_idx) = node1Graph;t(edge_idx) = node2Graph;
-    weights(edge_idx) = distance(edge.Node1Lat,edge.Node1Lon,edge.Node2Lat,edge.Node2Lon,almanac('earth', 'wgs84'));
+    weights(edge_idx) = deg2km(distance(edge.Node1Lat,edge.Node1Lon,edge.Node2Lat,edge.Node2Lon));
 end
 %% buding graph
 G = graph(s,t,weights);
+nodeID = cell2mat(keys(node_map)); nodeGraph = cell2mat(values(node_map));
+node_table = table(nodeID,nodeGraph);
 end

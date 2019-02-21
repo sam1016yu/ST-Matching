@@ -12,16 +12,18 @@ raw_gps_points = splitGPS2line(gpsfilename, 6, 5);
 % load('GPS_Points.mat')
 fprintf('Load GPS points done!\n');
 % searching for candidate points
-search_radius = 0.1;
-trajactory = mapCandidate(raw_gps_points,road_network,road_cells,search_radius,cell_size,grid_size);
-fprintf('Find candidate points done!\n');
 %% cut a smaller portion and build graph.
 % take a lot of time, do this only once for all trajactories to save time
-[G,node_table] = cutGridforTrajactory(trajactory,road_cells,road_network,grid_size);
-fprintf('Building graph done!\n');
+
 % fetching GPS candidate points
 trajactory_tags = unique(raw_gps_points.Tag);
+matched_trajactory = table(trajactory_tags);
+matched_trajactory.raw_points = cell(length(trajactory_tags),1);
+matched_trajactory.matched_points = cell(length(trajactory_tags),1);
+matched_trajactory.edges = cell(length(trajactory_tags),1);
 fId = fopen('trajactory.log','w+');
+warning('off','all')
+% for traj_idx = 3:10
 for traj_idx = 1:length(trajactory_tags)
     try
         fprintf(1,'Mapping trajactory %i of %i,Time: %s \n',traj_idx,length(trajactory_tags), datestr(now));
@@ -29,11 +31,14 @@ for traj_idx = 1:length(trajactory_tags)
         if trajactory_tags(traj_idx) == 0
             continue
         end
-        traj_loc = trajactory.Tag == trajactory_tags(traj_idx);
-        trajactory_to_match = trajactory(traj_loc,:);
-        result = matchTrajactory(G,node_table,trajactory_to_match,road_network);
-        trajactory.MatchedLon(traj_loc) = result(:,1);
-        trajactory.MatchedLat(traj_loc) = result(:,2);
+% traj_idx = 3;
+        traj_loc = raw_gps_points.Tag == trajactory_tags(traj_idx);
+        trajactory_to_match = raw_gps_points(traj_loc,:);
+        [path_result,point_result] = matchTrajactory(trajactory_to_match,road_network,road_cells,cell_size,grid_size);
+        [rows_point,~] = size(point_result);
+        matched_trajactory.raw_points(traj_idx) = mat2cell([trajactory_to_match.Longitude,trajactory_to_match.Latitude],rows_point);
+        matched_trajactory.matched_points(traj_idx) = mat2cell(point_result,rows_point);
+        matched_trajactory.edges(traj_idx) = mat2cell(path_result',length(path_result));
     catch e 
         % for excepetion occured (e.g., only one point in a trajactory,
         % no route find in graph...), catch it here and print in in log
@@ -41,7 +46,7 @@ for traj_idx = 1:length(trajactory_tags)
         fprintf(fId,'Error:\n%s\n',e.message);
         continue
     end
-
 end
+warning('on','all')
 fclose(fId);
-save match_result.mat trajactory
+save match_result.mat matched_trajactory

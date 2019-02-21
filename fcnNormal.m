@@ -5,6 +5,6 @@ function Np = fcnNormal(ptn_cand,ptn_raw)
 %        ptn_raw:  GPS point[lon lat]
 %%
 mu = 0; sigma = 20/1000;
-dist = distance(fliplr(ptn_cand),fliplr(ptn_raw),almanac('earth', 'wgs84'));
+dist = deg2km(distance(fliplr(ptn_cand),fliplr(ptn_raw)));
 Np = exp(-(dist-mu)^2/(2*sigma^2))/(sqrt(2*pi)*sigma);
 end

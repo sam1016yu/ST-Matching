@@ -7,8 +7,8 @@ function [path_edges,distance_min] = findShortestPath...
     % eStart,eEnd: correspoding candidate edges of pStart,pEnd
     eStart = road_network(road_network.EdgeID == eStart,:);
     eEnd = road_network(road_network.EdgeID == eEnd,:);
-    Node1Start = eStart.Node1ID;Node2Start = eStart.Node2ID;
-    Node1End = eEnd.Node1ID;Node2End = eEnd.Node2ID;
+    Node1ofStart = eStart.Node1ID;Node2ofStart = eStart.Node2ID;
+    Node1ofEnd = eEnd.Node1ID;Node2ofEnd = eEnd.Node2ID;
     %%
     % direction vectors
     vecPoints = pEnd-pStart;
@@ -19,17 +19,17 @@ function [path_edges,distance_min] = findShortestPath...
     % each edge.
     % directly adding node in graph may be harmful and logically incorrect
     if cross2(vecPoints,vecEdge1) >= 0
-        eStart_tail = Node2Start;
+        eStart_tail = Node2ofStart;
         p_start = [eStart.Node2Lon eStart.Node2Lat];
     else
-        eStart_tail = Node1Start;
+        eStart_tail = Node1ofStart;
         p_start = [eStart.Node1Lon eStart.Node1Lat];
     end
     if cross2(vecPoints,vecEdge2) >= 0
-        eEnd_head = Node1End;
+        eEnd_head = Node1ofEnd;
         p_end = [eEnd.Node1Lon eEnd.Node1Lat];
     else
-        eEnd_head = Node2End;
+        eEnd_head = Node2ofEnd;
         p_end = [eEnd.Node2Lon eEnd.Node2Lat];
     end
     %% starting and ending node of path search
@@ -40,8 +40,8 @@ function [path_edges,distance_min] = findShortestPath...
     [P,d] = shortestpath(G,graphNode_start,graphNode_end);
     % total distance calculation
     distance_min = d + ...
-        distance(fliplr(pStart),fliplr(p_start),almanac('earth', 'wgs84')) ...
-        + distance(fliplr(pEnd),fliplr(p_end), almanac('earth', 'wgs84'));
+        deg2km(distance(fliplr(pStart),fliplr(p_start))) ...
+        + deg2km(distance(fliplr(pEnd),fliplr(p_end)));
     %% adding edges passed according to the path found
     P_edges = zeros(1,length(P)-1);
     for p_idx = 2:length(P)
