@@ -2,6 +2,8 @@ function [path_list,point_list] = matchTrajactory(gps_points,road_network,road_c
 
 assert(height(gps_points)>1,'A trajactory need to be more than one point!');
 search_radius = 0.1;
+load('search_edges.mat');figure;hold on; 
+plot([search_edges.Node1Lon,search_edges.Node2Lon]',[search_edges.Node1Lat,search_edges.Node2Lat]','k-');
 trajactory = mapCandidate(gps_points,road_network,road_cells,search_radius,cell_size,grid_size);
 [G,node_table] = cutGridforTrajactory(trajactory,road_cells,road_network,grid_size,30);
 fprintf('Building graph done!\n');

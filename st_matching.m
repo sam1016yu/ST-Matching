@@ -3,7 +3,7 @@ clear;clc;
 roadnetworkfilename = 'RoadNetwork_Beijing.txt';
 cell_size = 0.1;
 [road_network,road_cells,grid_size] = splitRoad2Cell(roadnetworkfilename, cell_size);
-save road&cell.mat road_cells road_network cell_size grid_size
+% save road&cell.mat road_cells road_network cell_size grid_size
 % load('road&cell.mat');grid_size = [747 924];
 fprintf('Indexing grids done!\n');
 %% splitting GPS trajactories
@@ -12,9 +12,6 @@ raw_gps_points = splitGPS2line(gpsfilename, 6, 5);
 % load('GPS_Points.mat')
 fprintf('Load GPS points done!\n');
 % searching for candidate points
-%% cut a smaller portion and build graph.
-% take a lot of time, do this only once for all trajactories to save time
-
 % fetching GPS candidate points
 trajactory_tags = unique(raw_gps_points.Tag);
 matched_trajactory = table(trajactory_tags);
@@ -31,7 +28,7 @@ for traj_idx = 1:length(trajactory_tags)
         if trajactory_tags(traj_idx) == 0
             continue
         end
-% traj_idx = 3;
+% traj_idx = 4; 
         traj_loc = raw_gps_points.Tag == trajactory_tags(traj_idx);
         trajactory_to_match = raw_gps_points(traj_loc,:);
         [path_result,point_result] = matchTrajactory(trajactory_to_match,road_network,road_cells,cell_size,grid_size);

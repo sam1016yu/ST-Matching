@@ -40,5 +40,5 @@ function Ft = fcnTemporal(delta_t,path_edges,dist_min,road_network)
     avg_speed_vec = repmat(avg_speed,1,length(path_edges));
     speed_limit_vec = getSpeedLimits(road_network.Type(ismember(road_network.EdgeID,path_edges)));
     % cosine distance of two speed vecotrs
-    Ft = pdist([avg_speed_vec;speed_limit_vec],'cosine');
+    Ft = sum(avg_speed_vec.*speed_limit_vec)/sqrt(sum(avg_speed_vec.^2)*sum(speed_limit_vec.^2));
 end

@@ -19,7 +19,7 @@ end
 center_cell_id = find(road_cells.startLat<=lat & road_cells.endLat>= lat & ...
     road_cells.startLon <= lon & road_cells.endLon >= lon);
 %% search surrounding grids
-extra_grids_count = ceil(search_radius/cell_size)-1;
+extra_grids_count = ceil(search_radius/cell_size)+1;
 road_ids = searchSurroundingGrids(grid_size,center_cell_id,extra_grids_count,road_cells);
 %% project point to candidate edges to find candidate points
 candidate_edges = road_network(ismember(road_network.EdgeID,road_ids),:);
@@ -40,6 +40,8 @@ if row_p > top_k
     candidate_points = cell2mat(res_table.points(1:top_k));
     road_ids = res_table.road_ids(1:top_k);
 end
+h1 = plot(lon,lat,'ro');h2 = plot(candidate_points(:,1),candidate_points(:,2),'bx');
+delete(h1);delete(h2);
 end
 
 function [candidate] = project2Line(lon,lat,edge)
@@ -81,7 +83,7 @@ cell2rowcol = @(cellid) [ceil(cellid/grid_cols), ...
 rowcol2cell = @(row,col) grid_cols*(row-1) + col;
 isValidRowCol = @(row,col) row>0 && row<=grid_rows && col>0 && col <= grid_cols;
 
-road_ids = cell2mat(grid(center_cell_id,:).roadID)';
+road_ids = cell2mat(grid(center_cell_id,:).roadID);
 center_rowcol = cell2rowcol(center_cell_id);
 center_row = center_rowcol(1); center_col = center_rowcol(2);
 if search_steps > 0

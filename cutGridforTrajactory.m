@@ -72,4 +72,5 @@ end
 G = graph(s,t,weights);
 nodeID = cell2mat(keys(node_map)); nodeGraph = cell2mat(values(node_map));
 node_table = table(nodeID,nodeGraph);
+% save search_edges.mat search_edges
 end

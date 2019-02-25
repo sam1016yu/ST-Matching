@@ -4,7 +4,7 @@ function Np = fcnNormal(ptn_cand,ptn_raw)
 % Input: ptn_cand: candidate points [lon lat]
 %        ptn_raw:  GPS point[lon lat]
 %%
-mu = 0; sigma = 20/1000;
-dist = deg2km(distance(fliplr(ptn_cand),fliplr(ptn_raw)));
-Np = exp(-(dist-mu)^2/(2*sigma^2))/(sqrt(2*pi)*sigma);
+sigma = 20;
+dist = deg2km(distance(fliplr(ptn_cand),fliplr(ptn_raw)))*1000;
+Np = exp(-dist^2/(2*sigma^2))/(sqrt(2*pi)*sigma);
 end

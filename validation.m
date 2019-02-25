@@ -1,8 +1,9 @@
 load('match_result.mat');
 load('road&cell.mat');
 %%
-close all;
-for idx = 1:10
+% close all;
+for idx = 1:50
+%     idx = 3;
     trajac = matched_trajactory(matched_trajactory.trajactory_tags == idx,:);
     if isempty(cell2mat(trajac.matched_points))
         continue
