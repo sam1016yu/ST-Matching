@@ -12,6 +12,7 @@ eEnd = road_network(road_network.EdgeID == eEnd,:);
 if eStart.EdgeID == eEnd.EdgeID
     distance_min = deg2km(distance(fliplr(pStart),fliplr(pEnd)));
     path_edges = eStart.EdgeID;
+    p_start = pStart;p_end = pEnd;
 else
     Node1ofStart = eStart.Node1ID;Node2ofStart = eStart.Node2ID;
     Node1ofEnd = eEnd.Node1ID;Node2ofEnd = eEnd.Node2ID;
@@ -87,14 +88,14 @@ else
         % d = Inf means no path!
         % not sure of the reason yet
         assert(d<Inf, 'shortestPath:noPath','Could not find a path between candidate points!');
-%         h1 = plot(pStart(1),pStart(2),'ro');h2 = plot(pEnd(1),pEnd(2),'bo');
-%         h3 =  plot(p_start(1),p_start(2),'rx');h4 = plot(p_end(1),p_end(2),'bx');
-%         path_edges_raw =  road_network(ismember(road_network.EdgeID,path_edges),:);
-%         h5 = plot([path_edges_raw.Node1Lon,path_edges_raw.Node2Lon]',[path_edges_raw.Node1Lat,path_edges_raw.Node2Lat]','kd');
-%         h6 = plot([eStart.Node1Lon,eStart.Node2Lon],[eStart.Node1Lat,eStart.Node2Lat],'rd');
-%         h7 = plot([eEnd.Node1Lon,eEnd.Node2Lon],[eEnd.Node1Lat,eEnd.Node2Lat],'bd');
-%         delete(h1);delete(h2);delete(h3);delete(h4);delete(h5);delete(h6);delete(h7);
-%         plot([path_edges_raw.Node1Lon,path_edges_raw.Node2Lon]',[path_edges_raw.Node1Lat,path_edges_raw.Node2Lat]','k-')
     end
 end
+h1 = plot(pStart(1),pStart(2),'ro');h2 = plot(pEnd(1),pEnd(2),'bo');
+h3 =  plot(p_start(1),p_start(2),'rx');h4 = plot(p_end(1),p_end(2),'bx');
+path_edges_raw =  road_network(ismember(road_network.EdgeID,path_edges),:);
+h5 = plot([path_edges_raw.Node1Lon,path_edges_raw.Node2Lon]',[path_edges_raw.Node1Lat,path_edges_raw.Node2Lat]','kd');
+h6 = plot([eStart.Node1Lon,eStart.Node2Lon],[eStart.Node1Lat,eStart.Node2Lat],'rd');
+h7 = plot([eEnd.Node1Lon,eEnd.Node2Lon],[eEnd.Node1Lat,eEnd.Node2Lat],'bd');
+delete(h1);delete(h2);delete(h3);delete(h4);delete(h5);delete(h6);delete(h7);
+plot([path_edges_raw.Node1Lon,path_edges_raw.Node2Lon]',[path_edges_raw.Node1Lat,path_edges_raw.Node2Lat]','k-')
 end

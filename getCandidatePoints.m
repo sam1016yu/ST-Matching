@@ -20,31 +20,31 @@ center_cell_id = find(road_cells.startLat<=lat & road_cells.endLat>= lat & ...
     road_cells.startLon <= lon & road_cells.endLon >= lon);
 %% search surrounding grids
 extra_grids_count = ceil(search_radius/cell_size)+1;
-road_ids = searchSurroundingGrids(grid_size,center_cell_id,extra_grids_count,road_cells);
+road_ids = searchSurroundingGrids(grid_size,center_cell_id,extra_grids_count,road_cells,top_k);
 %% project point to candidate edges to find candidate points
 candidate_edges = road_network(ismember(road_network.EdgeID,road_ids),:);
-candidate_points = zeros(height(candidate_edges),2);
+candidate_points = zeros(height(candidate_edges),2);flags = zeros(height(candidate_edges),1);
 road_ids = candidate_edges.EdgeID;
 % figure;
 for edge_idx = 1 : height(candidate_edges)
-    candidate_points(edge_idx,:) = project2Line(lon,lat,candidate_edges(edge_idx,:));
+    [candidate_points(edge_idx,:),flags(edge_idx)] = project2Line(lon,lat,candidate_edges(edge_idx,:));
 end
 % hold off;
 % close all;
 [row_p,~] = size(candidate_points);
 if row_p > top_k
-    points = mat2cell(candidate_points,ones(1,row_p)); res_table = table(points,road_ids);
+    points = mat2cell(candidate_points,ones(1,row_p)); res_table = table(points,road_ids,flags);
     res_table.distance = distance(fliplr(cell2mat(res_table.points)),repmat([lat lon],row_p,[]));
-    res_table.distance = deg2km(res_table.distance);
-    res_table = sortrows(res_table,{'distance'},{'ascend'});
+    res_table = sortrows(res_table,{'distance','flags'},{'ascend','descend'});
     candidate_points = cell2mat(res_table.points(1:top_k));
     road_ids = res_table.road_ids(1:top_k);
 end
-h1 = plot(lon,lat,'ro');h2 = plot(candidate_points(:,1),candidate_points(:,2),'bx');
-delete(h1);delete(h2);
+% h1 = plot(lon,lat,'ro');
+% h2 = plot(candidate_points(:,1),candidate_points(:,2),'bx');
+% delete(h1);delete(h2);
 end
 
-function [candidate] = project2Line(lon,lat,edge)
+function [candidate,flg] = project2Line(lon,lat,edge)
 % see detail in:
 % http://blog.sina.com.cn/s/blog_5d5c80840101bnhw.html
 % http://s3.sinaimg.cn/orignal/5d5c8084gd638da294362&690
@@ -52,19 +52,22 @@ a = [edge.Node1Lon edge.Node1Lat];
 b = [edge.Node2Lon edge.Node2Lat];
 p = [lon lat];
 ap = p-a; ab = b-a; r = sum(ap.*ab)/sum(ab.^2);
-if r <= 0
+if r < 0
     candidate = a;
-elseif r>=1
+    flg = 0;
+elseif r> 1
     candidate = b;
+    flg = 0;
 else
     candidate = r*ab + a;
+    flg = 1;
 end
 % cla;hold on;
 % plot([a(1),b(1)],[a(2),b(2)],'o-');plot(candidate(1),candidate(2),'x');
 % hold off;
 end
 
-function [road_ids] = searchSurroundingGrids(grid_size,center_cell_id,search_steps,grid)
+function [road_ids] = searchSurroundingGrids(grid_size,center_cell_id,search_steps,grid,top_k)
 %searchSurroundingGrids
 %   search surrounding edges for candidate edges
 %   Input:
@@ -99,7 +102,7 @@ elseif any(road_ids)
     road_ids = unique(road_ids);
 else
     search_steps = 1;
-    while ~any(road_ids)
+    while lenth(road_ids) < top_k
         for step_col = -search_steps:search_steps
             for step_row = -search_steps:search_steps
                 if isValidRowCol(center_row+step_row,center_col+step_col)
