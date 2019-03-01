@@ -6,18 +6,23 @@ function [F,path_edges] = fcnSpatialTemporal(ptn0_cand,ptn1_cand,ptn0_raw,ptn1_r
 %   ptn0_raw,ptn1_raw: GPS points of which candidate points belong
 %   road_network: output of splitRoad2Cell
 %%
-try
+% try
     [path_edges,dist_min] = findShortestPath(G,node_table,ptn0_cand,edg0_cand,ptn1_cand,edg1_cand,road_network);
-    Fs = fcnSpatial(ptn1_cand,ptn0_raw,ptn1_raw,dist_min);
-    Ft = fcnTemporal(delta_t,path_edges,dist_min,road_network);
-    F = Fs * Ft;
-catch ME
-    if strcmp(ME.identifier,'shortestPath:noPath')
-        F = -Inf;path_edges = [];
+    if dist_min == Inf || dist_min == 0
+%         dist_min = 2*deg2km(distance(fliplr(ptn0_cand),fliplr(ptn1_cand)));
+        F = 0;
     else
-        rethrow(ME)
+        Fs = fcnSpatial(ptn1_cand,ptn0_raw,ptn1_raw,dist_min);
+        Ft = fcnTemporal(delta_t,path_edges,dist_min,road_network);
+        F = Fs * Ft;
     end
-end
+% catch ME
+%     if strcmp(ME.identifier,'shortestPath:noPath')
+%         F = 0; path_edges = [];
+%     else
+%         rethrow(ME)
+%     end
+% end
 end
 
 function Fs = fcnSpatial(ptn1_cand,ptn0_raw,ptn1_raw,dist_shortest)
@@ -30,8 +35,12 @@ function Fs = fcnSpatial(ptn1_cand,ptn0_raw,ptn1_raw,dist_shortest)
 %%
 Ncs = fcnNormal(ptn1_cand,ptn1_raw);
 % distance between two GPS points
-dist_actual = deg2km(distance(fliplr(ptn0_raw),fliplr(ptn1_raw)));
-Fs = Ncs*dist_actual/dist_shortest;
+dist_ratio = deg2km(distance(fliplr(ptn0_raw),fliplr(ptn1_raw)))/dist_shortest;
+if dist_ratio >= 1.5
+    dist_ratio = 0;
+%     dist_ratio = 1 + log10(dist_ratio)/4;
+end
+Fs = Ncs*dist_ratio;
 end
 
 

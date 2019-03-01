@@ -20,15 +20,15 @@ matched_trajactory.matched_points = cell(length(trajactory_tags),1);
 matched_trajactory.edges = cell(length(trajactory_tags),1);
 fId = fopen('trajactory.log','w+');
 warning('off','all')
-% for traj_idx = 50:100
+for traj_idx = 1:7
 % for traj_idx = 1:length(trajactory_tags)
 %     try
-%         fprintf(1,'Mapping trajactory %i of %i,Time: %s \n',traj_idx,length(trajactory_tags), datestr(now));
-%         fprintf(fId,'Mapping trajactory %i of %i,Time: %s \n',traj_idx,length(trajactory_tags), datestr(now));
-%         if trajactory_tags(traj_idx) == 0
-%             continue
-%         end
-traj_idx = 90; 
+        fprintf(1,'Mapping trajactory %i of %i,Time: %s \n',traj_idx,length(trajactory_tags), datestr(now));
+        fprintf(fId,'Mapping trajactory %i of %i,Time: %s \n',traj_idx,length(trajactory_tags), datestr(now));
+        if trajactory_tags(traj_idx) == 0
+            continue
+        end
+% traj_idx = 47; 
         traj_loc = raw_gps_points.Tag == trajactory_tags(traj_idx);
         trajactory_to_match = raw_gps_points(traj_loc,:);
         [path_result,point_result] = matchTrajactory(trajactory_to_match,road_network,road_cells,cell_size,grid_size);
@@ -43,7 +43,7 @@ traj_idx = 90;
 %         fprintf(fId,'Error:\n%s\n',e.message);
 %         continue
 %     end
-% end
+end
 warning('on','all')
 fclose(fId);
-% save match_result.mat matched_trajactory
+save match_result.mat matched_trajactory

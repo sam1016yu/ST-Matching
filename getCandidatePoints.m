@@ -40,8 +40,8 @@ if row_p > top_k
     road_ids = res_table.road_ids(1:top_k);
 end
 % h1 = plot(lon,lat,'ro');
-% h2 = plot(candidate_points(:,1),candidate_points(:,2),'bx');
-% delete(h1);delete(h2);
+% h3 = text(candidate_points(:,1)',candidate_points(:,2)',{'1','2','3','4','5'});
+% delete(h1);delete(h3);
 end
 
 function [candidate,flg] = project2Line(lon,lat,edge)
@@ -62,9 +62,11 @@ else
     candidate = r*ab + a;
     flg = 1;
 end
-% cla;hold on;
+% hold on;
+% plot(lon,lat,'*');
 % plot([a(1),b(1)],[a(2),b(2)],'o-');plot(candidate(1),candidate(2),'x');
-% hold off;
+% axis equal;
+% hold off;cla;
 end
 
 function [road_ids] = searchSurroundingGrids(grid_size,center_cell_id,search_steps,grid,top_k)
