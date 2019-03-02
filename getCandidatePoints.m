@@ -22,11 +22,12 @@ center_cell_id = find(road_cells.startLat<=lat & road_cells.endLat>= lat & ...
 extra_grids_count = ceil(search_radius/cell_size)+1;
 road_ids = searchSurroundingGrids(grid_size,center_cell_id,extra_grids_count,road_cells,top_k);
 %% project point to candidate edges to find candidate points
-candidate_edges = road_network(ismember(road_network.EdgeID,road_ids),:);
-candidate_points = zeros(height(candidate_edges),2);flags = zeros(height(candidate_edges),1);
-road_ids = candidate_edges.EdgeID;
+candidate_edges = road_network(ismember(road_network(:,1),road_ids),:);
+[rows_candidate_edges,~] = size(candidate_edges);
+candidate_points = zeros(rows_candidate_edges,2);flags = zeros(rows_candidate_edges,1);
+road_ids = candidate_edges(:,1);
 % figure;
-for edge_idx = 1 : height(candidate_edges)
+for edge_idx = 1 : rows_candidate_edges
     [candidate_points(edge_idx,:),flags(edge_idx)] = project2Line(lon,lat,candidate_edges(edge_idx,:));
 end
 % hold off;
@@ -48,8 +49,8 @@ function [candidate,flg] = project2Line(lon,lat,edge)
 % see detail in:
 % http://blog.sina.com.cn/s/blog_5d5c80840101bnhw.html
 % http://s3.sinaimg.cn/orignal/5d5c8084gd638da294362&690
-a = [edge.Node1Lon edge.Node1Lat];
-b = [edge.Node2Lon edge.Node2Lat];
+a = [edge(:,4) edge(:,5)];
+b = [edge(:,6) edge(:,7)];
 p = [lon lat];
 ap = p-a; ab = b-a; r = sum(ap.*ab)/sum(ab.^2);
 if r < 0

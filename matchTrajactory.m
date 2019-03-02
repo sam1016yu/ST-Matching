@@ -1,9 +1,9 @@
-function [path_list,point_list] = matchTrajactory(gps_points,road_network,road_cells,cell_size,grid_size)
+function [path_list,point_list] = matchTrajactory(gps_points,road_network,road_types,road_cells,cell_size,grid_size)
 
 assert(height(gps_points)>1,'A trajactory need to be more than one point!');
 search_radius = 0.1;
 % load('search_edges.mat');close all;figure;hold on; 
-% plot([search_edges.Node1Lon,search_edges.Node2Lon]',[search_edges.Node1Lat,search_edges.Node2Lat]','k-');
+% plot([search_edges(:,4),search_edges(:,6)]',[search_edges(:,5),search_edges(:,7)]','k-');
 % axis equal;
 trajactory = mapCandidate(gps_points,road_network,road_cells,search_radius,cell_size,grid_size);
 [G,node_table] = cutGridforTrajactory(trajactory,road_cells,road_network,grid_size,30);
@@ -41,7 +41,7 @@ for sample_idx = 2:height(trajactory)
             [new_score,path_edges] = fcnSpatialTemporal(cand_points_prev(idx_prev,:),...
                 cand_points_cur(idx_cur,:),sample_point_prev,sample_point_cur,...
                 delta_t,cand_edges_prev(idx_prev),cand_edges_cur(idx_cur),...
-                G,node_table,road_network);
+                G,node_table,road_network,road_types);
             alt = f_prev(idx_prev) + new_score;
             if alt > cur_max
 %                  fprintf('sample:%i,idx_cur:%i,idx_prev:%i,',sample_idx,idx_cur,idx_prev);
@@ -52,10 +52,10 @@ for sample_idx = 2:height(trajactory)
                 if ~any(parent_loc)
                     parent_loc = height(parent_table)+1;
                 end
-                fcnSpatialTemporal(cand_points_prev(idx_prev,:),...
-                cand_points_cur(idx_cur,:),sample_point_prev,sample_point_cur,...
-                delta_t,cand_edges_prev(idx_prev),cand_edges_cur(idx_cur),...
-                G,node_table,road_network);
+%                 fcnSpatialTemporal(cand_points_prev(idx_prev,:),...
+%                 cand_points_cur(idx_cur,:),sample_point_prev,sample_point_cur,...
+%                 delta_t,cand_edges_prev(idx_prev),cand_edges_cur(idx_cur),...
+%                 G,node_table,road_network,road_types);
                 parent_table.sample_idx(parent_loc) = sample_idx;
                 parent_table.candidate_idx(parent_loc) = idx_cur;
                 parent_table.parent(parent_loc) = mat2cell(cand_points_prev(idx_prev,:),1);

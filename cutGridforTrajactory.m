@@ -42,29 +42,30 @@ for col = (top_left_rowcol(2) - cut_step) : (bottom_right_rowcol(2) + cut_step)
     end
 end
 road_ids = cell2mat(keys(road_ids));
-search_edges = road_network(ismember(road_network.EdgeID,road_ids),:);
+search_edges = road_network(ismember(road_network(:,1),road_ids),:);
 node_map = containers.Map('KeyType','double','ValueType','double');
-node_num = 1;s = zeros(1,height(search_edges)); t = zeros(1,height(search_edges));
+[rows_search_edges,~] = size(search_edges);
+node_num = 1;s = zeros(1,rows_search_edges); t = zeros(1,rows_search_edges);
 %% building relationship between actual nodeID and the node ID in graph
 warning('off','all');
-for edge_idx = 1 : height(search_edges)
-    if ~isKey(node_map,search_edges.Node1ID(edge_idx))
-        node_map(search_edges.Node1ID(edge_idx)) = node_num;
+for edge_idx = 1 : rows_search_edges
+    if ~isKey(node_map,search_edges(edge_idx,2))
+        node_map(search_edges(edge_idx,2)) = node_num;
         node1Graph = node_num;
         node_num = node_num + 1;
     else
-        node1Graph = node_map(search_edges.Node1ID(edge_idx));
+        node1Graph = node_map(search_edges(edge_idx,2));
     end
-    if ~isKey(node_map,search_edges.Node2ID(edge_idx))
-        node_map(search_edges.Node2ID(edge_idx)) = node_num;
+    if ~isKey(node_map,search_edges(edge_idx,3))
+        node_map(search_edges(edge_idx,3)) = node_num;
         node2Graph = node_num;
         node_num = node_num + 1;
     else
-        node2Graph = node_map(search_edges.Node2ID(edge_idx));
+        node2Graph = node_map(search_edges(edge_idx,3));
     end
     s(edge_idx) = node1Graph;t(edge_idx) = node2Graph;
 end
-weights = deg2km(distance([search_edges.Node1Lat,search_edges.Node1Lon],[search_edges.Node2Lat,search_edges.Node2Lon]));
+weights = deg2km(distance([search_edges(:,5),search_edges(:,4)],[search_edges(:,7),search_edges(:,6)]));
 %% buding graph
 G = graph(s,t,weights);
 nodeID = cell2mat(keys(node_map)); nodeGraph = cell2mat(values(node_map));

@@ -1,4 +1,4 @@
-function [road_network,road_cells,grid_size] = splitRoad2Cell(filename,cell_size)
+function [road_network,road_type,road_cells,grid_size] = splitRoad2Cell(filename,cell_size)
 % filename: the raw txt file of road network, in required format
 % grid size: the desired grid size (in km)
 %% read raw text file of road network
@@ -8,15 +8,15 @@ fileID = fopen(filename,'r');
 dataArray = textscan(fileID, formatSpec, 'Delimiter',delimiter, 'TextType',...
     'string', 'EmptyValue', NaN,  'ReturnOnError', false);
 fclose(fileID);
-road_network_raw = table(dataArray{1:end-1}, 'VariableNames', ...
-    {'EdgeID','Node1ID','Node2ID','Node1Lon','Node1Lat','Node2Lon','Node2Lat','Type'});
+road_network_raw = [dataArray{1:end-2}];
+road_type = dataArray{end-1};
 clearvars delimiter formatSpec fileID dataArray ans;
 %% cut grids
 % determining 4 points on the edges
-lon_max = max(max(road_network_raw.Node1Lon),max(road_network_raw.Node2Lon));
-lon_min = min(min(road_network_raw.Node1Lon),min(road_network_raw.Node2Lon));
-lat_max = max(max(road_network_raw.Node1Lat),max(road_network_raw.Node2Lat));
-lat_min = min(min(road_network_raw.Node1Lat),min(road_network_raw.Node2Lat));
+lon_max = max(max(road_network_raw(:,4)),max(road_network_raw(:,6)));
+lon_min = min(min(road_network_raw(:,4)),min(road_network_raw(:,6)));
+lat_max = max(max(road_network_raw(:,5)),max(road_network_raw(:,7)));
+lat_min = min(min(road_network_raw(:,5)),min(road_network_raw(:,7)));
 % calculate area size
 area_height = max(deg2km(distance([lat_max,lon_min],[lat_min,lon_min])),...
     deg2km(distance([lat_max,lon_max],[lat_min,lon_max])));
@@ -40,7 +40,7 @@ road_cells.endLat = reshape(repmat(lat_vec(2:end),x_size-1,1),[],1);
 road_cells = [road_cells(:,2:end) road_cells(:,1)];
 road_network = road_network_raw([1,4:end],:);
 grid_size = [y_size-1, x_size-1];
-clearvars -except road_cells road_network grid_size
+clearvars -except road_cells road_network grid_size road_type
 end
 
 
@@ -52,8 +52,9 @@ function road_cells = findEdgeIndex(lon_vec,lat_vec,road_network_raw)
 road_cells = cell((length(lon_vec)-1) * (length(lat_vec)-1),1);
 % since linspace() is used, cell width and height are identical
 cell_width = lon_vec(2)-lon_vec(1);cell_height = lat_vec(2)-lat_vec(1);
-for edges_idx = 1: height(road_network_raw)
-    fprintf('Indexing edges %i of %i to cut grid\n',edges_idx,height(road_network_raw));
+[rows_road,~] = size(road_network_raw);
+for edges_idx = 1: rows_road
+%     fprintf('Indexing edges %i of %i to cut grid\n',edges_idx,rows_road);
     edges = road_network_raw(edges_idx,:);
     % for a given edge, call divideEdges() to generate test points
     [test_lon_vec,test_lat_vec] = divideEdges(edges,cell_width,cell_height);
@@ -86,9 +87,9 @@ for edges_idx = 1: height(road_network_raw)
     for idx = 1:length(edge_index)
         grid_id = edge_index(idx);
         if isempty(road_cells{grid_id,1})
-            road_cells{grid_id,1} = edges.EdgeID;
+            road_cells{grid_id,1} = edges(:,1);
         else
-            road_cells{grid_id,1} = [road_cells{grid_id,1} edges.EdgeID];
+            road_cells{grid_id,1} = [road_cells{grid_id,1} edges(:,1)];
         end
     end
     % update waitbar
@@ -105,20 +106,20 @@ function [test_lon,test_lat] = divideEdges(edges,lon_grid,lat_grid)
     % test points are:
     % start, end, 1/3 and 2/3 division point
     % span of the search
-    lon_span = ceil(abs(edges.Node1Lon-edges.Node2Lon)/(lon_grid));
-    lat_span = ceil(abs(edges.Node1Lat-edges.Node2Lat)/(lat_grid));
+    lon_span = ceil(abs(edges(:,4)-edges(:,6))/(lon_grid));
+    lat_span = ceil(abs(edges(:,5)-edges(:,7))/(lat_grid));
     span = max(lon_span,lat_span);
     % definite proportional division point formula 定比分点公式
     porDiv = @(lambda,start_cor,end_cor) (start_cor+lambda*end_cor)/(1+lambda);
     % always include starting and ending points
-    test_lon = [edges.Node1Lon,edges.Node2Lon];
-    test_lat = [edges.Node1Lat,edges.Node2Lat];
+    test_lon = [edges(:,4),edges(:,6)];
+    test_lat = [edges(:,5),edges(:,7)];
     if span > 1
         test_lon = [test_lon zeros(1,span-1)];
         for idx = 1:span-1
             por = idx/(span-idx);
-            test_lon(2+idx) = porDiv(por,edges.Node1Lon,edges.Node2Lon);
-            test_lat(2+idx) = porDiv(por,edges.Node1Lat,edges.Node2Lat);
+            test_lon(2+idx) = porDiv(por,edges(:,4),edges(:,6));
+            test_lat(2+idx) = porDiv(por,edges(:,5),edges(:,7));
         end
     end
     test_lon = sort(test_lon); test_lat = sort(test_lat);

@@ -1,4 +1,4 @@
-function [F,path_edges] = fcnSpatialTemporal(ptn0_cand,ptn1_cand,ptn0_raw,ptn1_raw,delta_t,edg0_cand,edg1_cand,G,node_table,road_network)
+function [F,path_edges] = fcnSpatialTemporal(ptn0_cand,ptn1_cand,ptn0_raw,ptn1_raw,delta_t,edg0_cand,edg1_cand,G,node_table,road_network,road_types)
 %fcnSpatial:spatial analysis function
 %   Implementation of equation 3 in the paper
 %   Input:
@@ -13,7 +13,7 @@ function [F,path_edges] = fcnSpatialTemporal(ptn0_cand,ptn1_cand,ptn0_raw,ptn1_r
         F = 0;
     else
         Fs = fcnSpatial(ptn1_cand,ptn0_raw,ptn1_raw,dist_min);
-        Ft = fcnTemporal(delta_t,path_edges,dist_min,road_network);
+        Ft = fcnTemporal(delta_t,path_edges,dist_min,road_types,road_network);
         F = Fs * Ft;
     end
 % catch ME
@@ -44,10 +44,10 @@ Fs = Ncs*dist_ratio;
 end
 
 
-function Ft = fcnTemporal(delta_t,path_edges,dist_min,road_network)
+function Ft = fcnTemporal(delta_t,path_edges,dist_min,road_types,road_network)
     avg_speed = dist_min / delta_t * 60 * 60;
     avg_speed_vec = repmat(avg_speed,1,length(path_edges));
-    speed_limit_vec = getSpeedLimits(road_network.Type(ismember(road_network.EdgeID,path_edges)));
+    speed_limit_vec = getSpeedLimits(road_types(ismember(road_network(:,1),path_edges),:));
     % cosine distance of two speed vecotrs
     Ft = sum(avg_speed_vec.*speed_limit_vec)/sqrt(sum(avg_speed_vec.^2)*sum(speed_limit_vec.^2));
 end

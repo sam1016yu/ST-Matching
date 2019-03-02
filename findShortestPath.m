@@ -5,7 +5,6 @@ function [path_edges,distance_min] = findShortestPath...
 % node_table: correspoding relationship between NodeID and GraphID
 % pStart,pEnd: starting points and ending points [lon lat]
 % eStart,eEnd: correspoding candidate edges of pStart,pEnd
-road_network = road_network{:,1:7};
 eStart = road_network(road_network(:,1) == eStart,:);
 eEnd = road_network(road_network(:,1) == eEnd,:);
 
