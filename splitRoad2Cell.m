@@ -1,4 +1,4 @@
-function [road_network,road_type,road_cells,grid_size] = splitRoad2Cell(filename,cell_size)
+function [road_network,road_type,road_cells,road_ids,grid_size] = splitRoad2Cell(filename,cell_size)
 % filename: the raw txt file of road network, in required format
 % grid size: the desired grid size (in km)
 %% read raw text file of road network
@@ -28,19 +28,18 @@ y_size = ceil(area_height/cell_size);x_size = ceil(area_width/cell_size);
 lon_vec = linspace(lon_min,lon_max,x_size);
 lat_vec = linspace(lat_min,lat_max,y_size);
 %% find grid 
-roadID = findEdgeIndex(lon_vec,lat_vec,road_network_raw);
-road_cells = table(roadID);
+road_ids = findEdgeIndex(lon_vec,lat_vec,road_network_raw);
+rows_ids = length(road_ids);road_cells = zeros(rows_ids,5);
+% road_cells = table(roadID);
 %% fill info of each cell
-road_cells.cellID = (1:height(road_cells))';
-road_cells.startLon = repmat(lon_vec(1:end-1),1,y_size-1)';
-road_cells.endLon = repmat(lon_vec(2:end),1,y_size-1)';
-road_cells.startLat = reshape(repmat(lat_vec(1:end-1),x_size-1,1),[],1);
-road_cells.endLat = reshape(repmat(lat_vec(2:end),x_size-1,1),[],1);
+road_cells(:,1) = (1:rows_ids)';
+road_cells(:,2) = repmat(lon_vec(1:end-1),1,y_size-1)';
+road_cells(:,3) = repmat(lon_vec(2:end),1,y_size-1)';
+road_cells(:,4) = reshape(repmat(lat_vec(1:end-1),x_size-1,1),[],1);
+road_cells(:,5) = reshape(repmat(lat_vec(2:end),x_size-1,1),[],1);
 %% final output
-road_cells = [road_cells(:,2:end) road_cells(:,1)];
 road_network = road_network_raw([1,4:end],:);
 grid_size = [y_size-1, x_size-1];
-clearvars -except road_cells road_network grid_size road_type
 end
 
 

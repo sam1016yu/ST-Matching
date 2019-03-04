@@ -1,13 +1,13 @@
-function [G,node_table] = cutGridforTrajactory(trajactory,road_cells,road_network,grid_size,cut_step)
+function [G,node_table] = cutGridforTrajactory(trajactory,road_cells,road_ids_all,road_network,grid_size,cut_step)
 % for a given trajactory, find the area to search for shortest path.
 % need to cut the grid so that only a portion of graph is used to search
 
 %% convinence function for finding
-findCellByLonLat = @(lon,lat) find(road_cells.startLat<=lat & road_cells.endLat>= lat & ...
-    road_cells.startLon <= lon & road_cells.endLon >= lon);
+findCellByLonLat = @(lon,lat) find(road_cells(:,4)<=lat & road_cells(:,5)>= lat & ...
+    road_cells(:,2) <= lon & road_cells(:,3) >= lon);
 
-traj_min_lon = min(trajactory.Longitude); traj_max_lon = max(trajactory.Longitude);
-traj_min_lat = min(trajactory.Latitude); traj_max_lat = max(trajactory.Latitude);
+traj_min_lon = min(trajactory(:,3)); traj_max_lon = max(trajactory(:,3));
+traj_min_lat = min(trajactory(:,4)); traj_max_lat = max(trajactory(:,4));
 
 % corner of grid, two diag items
 top_left_id = findCellByLonLat(traj_min_lon,traj_min_lat);
@@ -31,8 +31,8 @@ top_left_rowcol = cell2rowcol(top_left_id); bottom_right_rowcol = cell2rowcol(bo
 for col = (top_left_rowcol(2) - cut_step) : (bottom_right_rowcol(2) + cut_step)
     for row = (top_left_rowcol(1) - cut_step) : (bottom_right_rowcol(1) + cut_step)
         if  row>0 && row<=grid_rows && col>0 && col <= grid_cols
-            if ~isempty(road_cells.roadID{rowcol2cell(row,col)})
-                roads_to_add = road_cells.roadID{rowcol2cell(row,col)};
+            if ~isempty(road_ids_all{rowcol2cell(row,col),1})
+                roads_to_add = road_ids_all{rowcol2cell(row,col),1};
                 for road_idx = 1:length(roads_to_add)
                     road_id = roads_to_add(road_idx);
                     road_ids(road_id) = 1;
@@ -68,7 +68,7 @@ end
 weights = deg2km(distance([search_edges(:,5),search_edges(:,4)],[search_edges(:,7),search_edges(:,6)]));
 %% buding graph
 G = graph(s,t,weights);
-nodeID = cell2mat(keys(node_map)); nodeGraph = cell2mat(values(node_map));
-node_table = table(nodeID,nodeGraph);
+nodeID = cell2mat(keys(node_map))'; nodeGraph = cell2mat(values(node_map))';
+node_table = [nodeID,nodeGraph];
 % save search_edges.mat search_edges
 end

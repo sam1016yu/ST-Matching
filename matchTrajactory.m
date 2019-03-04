@@ -1,19 +1,22 @@
-function [path_list,point_list] = matchTrajactory(gps_points,road_network,road_types,road_cells,cell_size,grid_size)
-
-assert(height(gps_points)>1,'A trajactory need to be more than one point!');
+function [path_list,point_list] = matchTrajactory(trajactory,...
+    road_network,road_types,road_cells,road_ids_all,cell_size,grid_size)
+[rows_trajactory,~] = size(trajactory);
+assert(rows_trajactory>1,'A trajactory need to be more than one point!');
 search_radius = 0.1;
 % load('search_edges.mat');close all;figure;hold on; 
 % plot([search_edges(:,4),search_edges(:,6)]',[search_edges(:,5),search_edges(:,7)]','k-');
 % axis equal;
-trajactory = mapCandidate(gps_points,road_network,road_cells,search_radius,cell_size,grid_size);
-[G,node_table] = cutGridforTrajactory(trajactory,road_cells,road_network,grid_size,30);
+cand_points_edges = mapCandidate(trajactory,road_network,road_cells,road_ids_all,search_radius,cell_size,grid_size);
+[G,node_table] = cutGridforTrajactory(trajactory,road_cells,road_ids_all,road_network,grid_size,30);
 % fprintf('Building graph done!\n');
 % Find matched sequence
 % see 'findMatchedSquence.png' for detail
 %% first round
-cand_points_prev = cell2mat(trajactory.CandidatePoints(1));
-cand_edges_prev = cell2mat(trajactory.CandidateEdges(1));
-sample_point_prev = [trajactory.Longitude(1) trajactory.Latitude(1)];
+% cand_points_prev = cell2mat(trajactory.CandidatePoints(1));
+% cand_edges_prev = cell2mat(trajactory.CandidateEdges(1));
+cand_points_prev = cand_points_edges(:,1:2,1);
+cand_edges_prev = cand_points_edges(:,3,1);
+sample_point_prev = [trajactory(1,3) trajactory(1,4)];
 [cand_points_prev_row,~] = size(cand_points_prev);
 f_prev = zeros(1,cand_points_prev_row);
 for cand_idx = 1 : cand_points_prev_row
@@ -25,14 +28,14 @@ parent_table = table;
 parent_table.sample_idx = zeros(0);parent_table.candidate_idx = zeros(0);
 parent_table.parent = cell(0);parent_table.parent_idx = zeros(0);
 parent_table.path = cell(0);
-for sample_idx = 2:height(trajactory)
+for sample_idx = 2:rows_trajactory
 %     fprintf('sample idx:%i \n',sample_idx);
 %     f_prev
-    delta_t = trajactory.Timestamp(sample_idx) - trajactory.Timestamp(sample_idx-1);
-    sample_point_cur = [trajactory.Longitude(sample_idx),...
-        trajactory.Latitude(sample_idx)];
-    cand_points_cur = cell2mat(trajactory.CandidatePoints(sample_idx));
-    cand_edges_cur = cell2mat(trajactory.CandidateEdges(sample_idx));
+    delta_t = trajactory(sample_idx,2) - trajactory(sample_idx-1,2);
+    sample_point_cur = [trajactory(sample_idx,3),...
+        trajactory(sample_idx,4)];
+    cand_points_cur = cand_points_edges(:,1:2,sample_idx);
+    cand_edges_cur =  cand_points_edges(:,3,sample_idx);
     [cand_points_cur_row,~] = size(cand_points_cur);
     f_cur = zeros(1,cand_points_cur_row); 
     for idx_cur = 1 : length(f_cur)
@@ -86,31 +89,32 @@ end
 point_list(1,:) = cur;
 end
 
-function [trajactory] = mapCandidate(trajactory,road_network,road_cells,search_radius,cell_size,grid_size)
+function [cand_points_edges] = mapCandidate(trajactory,road_network,...
+    road_cells,road_ids_all,search_radius,cell_size,grid_size)
 % find all candidate points
-trajactory.CandidatePoints = cell(height(trajactory),1);
-trajactory.CandidateEdges = cell(height(trajactory),1);
-for point_idx = 1:height(trajactory)
+top_k = 5;
+[rows_trajactory,~] = size(trajactory);
+cand_points_edges = zeros(top_k,3,rows_trajactory);
+for point_idx = 1:rows_trajactory
 %     fprintf('Mapping candidates %i of %i \n',point_idx,height(trajactory));
-    lon = trajactory.Longitude(point_idx);
-    lat = trajactory.Latitude(point_idx);
+    lon = trajactory(point_idx,3);
+    lat = trajactory(point_idx,4);
     [road_ids, candPoints] = getCandidatePoints(lon,lat,...
-        road_network,road_cells,search_radius,cell_size,grid_size);
-    [row_can,~] = size(candPoints);
-    trajactory.CandidatePoints(point_idx) = mat2cell(candPoints,row_can);
-    trajactory.CandidateEdges(point_idx) = mat2cell(road_ids,row_can);
+        road_network,road_cells,road_ids_all,search_radius,cell_size,grid_size,top_k);
+    cand_points_edges(:,1:2,point_idx) = candPoints;
+    cand_points_edges(:,3,point_idx) = road_ids;
 end
 end
 
-function [cand_points,cand_edges,f] = cutWindow(cand_points_prev,cand_edges_prev,f_prev)
-    window_size = 5;
-    [cand_points_prev_row,~] = size(cand_points_prev);
-    if cand_points_prev_row <= window_size
-        cand_points = cand_points_prev;cand_edges = cand_edges_prev;f = f_prev;
-    else
-        matrix_all = [f_prev',cand_edges_prev,cand_points_prev];
-        matrix_all = sortrows(matrix_all,1,'descend');
-        f = matrix_all(1:window_size,1)';cand_points = matrix_all(1:window_size,3:4);
-        cand_edges = matrix_all(1:window_size,2);
-    end
-end
+% function [cand_points,cand_edges,f] = cutWindow(cand_points_prev,cand_edges_prev,f_prev)
+%     window_size = 5;
+%     [cand_points_prev_row,~] = size(cand_points_prev);
+%     if cand_points_prev_row <= window_size
+%         cand_points = cand_points_prev;cand_edges = cand_edges_prev;f = f_prev;
+%     else
+%         matrix_all = [f_prev',cand_edges_prev,cand_points_prev];
+%         matrix_all = sortrows(matrix_all,1,'descend');
+%         f = matrix_all(1:window_size,1)';cand_points = matrix_all(1:window_size,3:4);
+%         cand_edges = matrix_all(1:window_size,2);
+%     end
+% end

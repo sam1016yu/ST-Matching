@@ -56,8 +56,8 @@ else
         path_edges = [eStart(:,1),eEnd(:,1)];
     else
         %% starting and ending node of path search
-        graphNode_start = node_table.nodeGraph(node_table.nodeID == eStart_tail);
-        graphNode_end = node_table.nodeGraph(node_table.nodeID == eEnd_head);
+        graphNode_start = node_table(node_table(:,1) == eStart_tail,2);
+        graphNode_end = node_table(node_table(:,1) == eEnd_head,2);
         % shortest distance is found between the tail node of start edge and
         % head node of end edge
         [P,d] = shortestpath(G,graphNode_start,graphNode_end);
@@ -69,17 +69,17 @@ else
         P_edges = zeros(1,length(P)-1);
         for p_idx = 2:length(P)
             ppStart = P(p_idx-1);ppEnd = P(p_idx);
-            ppStart = node_table.nodeID(node_table.nodeGraph == ppStart);
-            ppEnd = node_table.nodeID(node_table.nodeGraph == ppEnd);
-            if any(road_network(:,2) == ppStart & road_network(:,3) == ppEnd)
-                edg_loc = (road_network(:,2) == ppStart & road_network(:,3) == ppEnd);
-                matched_edge = road_network(edg_loc,1);
-            else
+            ppStart = node_table(node_table(:,2) == ppStart,1);
+            ppEnd = node_table(node_table(:,2) == ppEnd,1);
+            edg_loc = (road_network(:,2) == ppStart & road_network(:,3) == ppEnd);
+            if ~any(edg_loc)
+%                 matched_edge = road_network(edg_loc,1);
+%             else
                 edg_loc = (road_network(:,2) == ppEnd  & road_network(:,3) == ppStart);
-                matched_edge = road_network(edg_loc,1);
+%                 matched_edge = road_network(edg_loc,1);
             end
             % if more than one edge is found, return only one
-            P_edges(p_idx-1) = matched_edge(1);
+            P_edges(p_idx-1) = road_network(find(edg_loc, 1),1);
         end
         if any(P_edges == eStart(:,1))
             distance_min = distance_min - 2*start2tail;

@@ -1,4 +1,4 @@
-function [road_ids,candidate_points] = getCandidatePoints(lon,lat,road_network,road_cells,search_radius,cell_size, grid_size,top_k)
+function [road_ids,candidate_points] = getCandidatePoints(lon,lat,road_network,road_cells,road_ids_all,search_radius,cell_size, grid_size,top_k)
 %find candidate points within radius r
 % Parameters:
 % lon,lat: longitude and latitude of the point to be searched
@@ -16,11 +16,11 @@ if nargin < 8
 end
 %% search for candidate edges within given grid
 % locate center grid first
-center_cell_id = find(road_cells.startLat<=lat & road_cells.endLat>= lat & ...
-    road_cells.startLon <= lon & road_cells.endLon >= lon);
+center_cell_id = find(road_cells(:,4)<=lat & road_cells(:,5)>= lat & ...
+    road_cells(:,2) <= lon & road_cells(:,3) >= lon);
 %% search surrounding grids
 extra_grids_count = ceil(search_radius/cell_size)+1;
-road_ids = searchSurroundingGrids(grid_size,center_cell_id,extra_grids_count,road_cells,top_k);
+road_ids = searchSurroundingGrids(grid_size,center_cell_id,extra_grids_count,road_cells,road_ids_all,top_k);
 %% project point to candidate edges to find candidate points
 candidate_edges = road_network(ismember(road_network(:,1),road_ids),:);
 [rows_candidate_edges,~] = size(candidate_edges);
@@ -70,7 +70,7 @@ end
 % hold off;cla;
 end
 
-function [road_ids] = searchSurroundingGrids(grid_size,center_cell_id,search_steps,grid,top_k)
+function [road_ids] = searchSurroundingGrids(grid_size,center_cell_id,search_steps,grid,road_ids_all,top_k)
 %searchSurroundingGrids
 %   search surrounding edges for candidate edges
 %   Input:
@@ -89,27 +89,31 @@ cell2rowcol = @(cellid) [ceil(cellid/grid_cols), ...
 rowcol2cell = @(row,col) grid_cols*(row-1) + col;
 isValidRowCol = @(row,col) row>0 && row<=grid_rows && col>0 && col <= grid_cols;
 
-road_ids = cell2mat(grid(center_cell_id,:).roadID);
+road_ids = road_ids_all{center_cell_id,1};
 center_rowcol = cell2rowcol(center_cell_id);
 center_row = center_rowcol(1); center_col = center_rowcol(2);
 if search_steps > 0
     for step_col = -search_steps:search_steps
         for step_row = -search_steps:search_steps
             if isValidRowCol(center_row+step_row,center_col+step_col)
-                road_ids = [road_ids cell2mat(grid(rowcol2cell(center_row+step_row,center_col+step_col),:).roadID)];
+                road_ids = [road_ids road_ids_all{rowcol2cell(center_row+step_row,center_col+step_col),1}];
             end
         end
     end
-    road_ids = unique(road_ids)';
-elseif any(road_ids)
-    road_ids = unique(road_ids);
-else
-    search_steps = 1;
-    while lenth(road_ids) < top_k
+end
+road_ids = unique(road_ids)';
+if length(road_ids) < top_k
+    road_ids = road_ids';
+    if search_steps < 0
+        search_steps = 1;
+    else
+        search_steps = search_steps + 1;
+    end
+    while length(road_ids) < top_k
         for step_col = -search_steps:search_steps
             for step_row = -search_steps:search_steps
                 if isValidRowCol(center_row+step_row,center_col+step_col)
-                    road_ids = [road_ids cell2mat(grid(rowcol2cell(center_row+step_row,center_col+step_col),:).roadID)];
+                    road_ids = [road_ids road_ids_all{rowcol2cell(center_row+step_row,center_col+step_col),1}];
                 end
             end
         end
