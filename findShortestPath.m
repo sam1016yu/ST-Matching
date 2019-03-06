@@ -8,11 +8,15 @@ function [path_edges,distance_min] = findShortestPath...
 eStart = road_network(road_network(:,1) == eStart,:);
 eEnd = road_network(road_network(:,1) == eEnd,:);
 
+
 %%
 if eStart(:,1) == eEnd(:,1)
     distance_min = deg2km(distance(fliplr(pStart),fliplr(pEnd)));
     path_edges = eStart(:,1);
 %     p_start = pStart;p_end = pEnd;
+elseif all(pStart == pEnd)
+    distance_min = 0;
+    path_edges = [eStart(:,1) eEnd(:,1)];
 else
     Node1ofStart = eStart(:,2);Node2ofStart = eStart(:,3);
     Node1ofEnd = eEnd(:,2);Node2ofEnd = eEnd(:,3);
@@ -68,7 +72,8 @@ else
         %% adding edges passed according to the path found
         P_edges = zeros(1,length(P)-1);
         for p_idx = 2:length(P)
-            ppStart = P(p_idx-1);ppEnd = P(p_idx);
+            ppStart = P(p_idx-1);
+            ppEnd = P(p_idx);
             ppStart = node_table(node_table(:,2) == ppStart,1);
             ppEnd = node_table(node_table(:,2) == ppEnd,1);
             edg_loc = (road_network(:,2) == ppStart & road_network(:,3) == ppEnd);
@@ -80,6 +85,7 @@ else
             end
             % if more than one edge is found, return only one
             P_edges(p_idx-1) = road_network(find(edg_loc, 1),1);
+%             P_edges(p_idx-1) = findEdge(road_network,ppStart,ppEnd);
         end
         if any(P_edges == eStart(:,1))
             distance_min = distance_min - 2*start2tail;
@@ -87,7 +93,7 @@ else
         if any(P_edges == eEnd(:,1))
             distance_min = distance_min - 2*end2head;
         end
-        path_edges = unique([eStart(:,1) P_edges eEnd(:,1)]);
+        path_edges = [eStart(:,1) P_edges eEnd(:,1)];
         
         % d = Inf means no path!
         % not sure of the reason yet

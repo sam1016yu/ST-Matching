@@ -1,4 +1,4 @@
-function [G,node_table] = cutGridforTrajactory(trajactory,road_cells,road_ids_all,road_network,grid_size,cut_step)
+function [G,node_table,road_network] = cutGridforTrajactory(candidate_edges,trajactory,road_cells,road_ids_all,road_network,grid_size,cut_step)
 % for a given trajactory, find the area to search for shortest path.
 % need to cut the grid so that only a portion of graph is used to search
 
@@ -41,7 +41,7 @@ for col = (top_left_rowcol(2) - cut_step) : (bottom_right_rowcol(2) + cut_step)
         end
     end
 end
-road_ids = cell2mat(keys(road_ids));
+road_ids = cell2mat(keys(road_ids));road_ids = [road_ids,candidate_edges'];
 search_edges = road_network(ismember(road_network(:,1),road_ids),:);
 node_map = containers.Map('KeyType','double','ValueType','double');
 [rows_search_edges,~] = size(search_edges);
@@ -69,6 +69,8 @@ weights = deg2km(distance([search_edges(:,5),search_edges(:,4)],[search_edges(:,
 %% buding graph
 G = graph(s,t,weights);
 nodeID = cell2mat(keys(node_map))'; nodeGraph = cell2mat(values(node_map))';
-node_table = [nodeID,nodeGraph];
+node_table = [nodeID,nodeGraph]; 
+road_network = road_network(ismember(road_network(:,1),road_ids'),:);
+% road
 % save search_edges.mat search_edges
 end

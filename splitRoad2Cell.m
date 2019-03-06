@@ -1,22 +1,24 @@
-function [road_network,road_type,road_cells,road_ids,grid_size] = splitRoad2Cell(filename,cell_size)
+function [road_network,speed_limits,road_cells,road_ids,grid_size] = splitRoad2Cell(filename,cell_size)
 % filename: the raw txt file of road network, in required format
 % grid size: the desired grid size (in km)
 %% read raw text file of road network
 delimiter = ',';
-formatSpec = '%f%f%f%f%f%f%f%C%[^\n\r]';
+formatSpec = '%f%f%f%f%f%f%f%s%[^\n\r]';
 fileID = fopen(filename,'r');
 dataArray = textscan(fileID, formatSpec, 'Delimiter',delimiter, 'TextType',...
     'string', 'EmptyValue', NaN,  'ReturnOnError', false);
 fclose(fileID);
-road_network_raw = [dataArray{1:end-2}];
+road_network = [dataArray{1:end-2}];
 road_type = dataArray{end-1};
+road_type = cellstr(road_type);
 clearvars delimiter formatSpec fileID dataArray ans;
+speed_limits = getSpeedLimits(road_type);
 %% cut grids
 % determining 4 points on the edges
-lon_max = max(max(road_network_raw(:,4)),max(road_network_raw(:,6)));
-lon_min = min(min(road_network_raw(:,4)),min(road_network_raw(:,6)));
-lat_max = max(max(road_network_raw(:,5)),max(road_network_raw(:,7)));
-lat_min = min(min(road_network_raw(:,5)),min(road_network_raw(:,7)));
+lon_max = max(max(road_network(:,4)),max(road_network(:,6)));
+lon_min = min(min(road_network(:,4)),min(road_network(:,6)));
+lat_max = max(max(road_network(:,5)),max(road_network(:,7)));
+lat_min = min(min(road_network(:,5)),min(road_network(:,7)));
 % calculate area size
 area_height = max(deg2km(distance([lat_max,lon_min],[lat_min,lon_min])),...
     deg2km(distance([lat_max,lon_max],[lat_min,lon_max])));
@@ -28,7 +30,7 @@ y_size = ceil(area_height/cell_size);x_size = ceil(area_width/cell_size);
 lon_vec = linspace(lon_min,lon_max,x_size);
 lat_vec = linspace(lat_min,lat_max,y_size);
 %% find grid 
-road_ids = findEdgeIndex(lon_vec,lat_vec,road_network_raw);
+road_ids = findEdgeIndex(lon_vec,lat_vec,road_network);
 rows_ids = length(road_ids);road_cells = zeros(rows_ids,5);
 % road_cells = table(roadID);
 %% fill info of each cell
@@ -38,12 +40,12 @@ road_cells(:,3) = repmat(lon_vec(2:end),1,y_size-1)';
 road_cells(:,4) = reshape(repmat(lat_vec(1:end-1),x_size-1,1),[],1);
 road_cells(:,5) = reshape(repmat(lat_vec(2:end),x_size-1,1),[],1);
 %% final output
-road_network = road_network_raw([1,4:end],:);
+% road_network = road_network([1,4:end],:);
 grid_size = [y_size-1, x_size-1];
 end
 
 
-function road_cells = findEdgeIndex(lon_vec,lat_vec,road_network_raw)
+function road_cells = findEdgeIndex(lon_vec,lat_vec,road_network)
 %% given gridded network and edge,find whcih grid edge belong to
 
 % Initialize a waitbar to show progress
@@ -51,10 +53,10 @@ function road_cells = findEdgeIndex(lon_vec,lat_vec,road_network_raw)
 road_cells = cell((length(lon_vec)-1) * (length(lat_vec)-1),1);
 % since linspace() is used, cell width and height are identical
 cell_width = lon_vec(2)-lon_vec(1);cell_height = lat_vec(2)-lat_vec(1);
-[rows_road,~] = size(road_network_raw);
+[rows_road,~] = size(road_network);
 for edges_idx = 1: rows_road
 %     fprintf('Indexing edges %i of %i to cut grid\n',edges_idx,rows_road);
-    edges = road_network_raw(edges_idx,:);
+    edges = road_network(edges_idx,:);
     % for a given edge, call divideEdges() to generate test points
     [test_lon_vec,test_lat_vec] = divideEdges(edges,cell_width,cell_height);
     edge_index = zeros(1,length(test_lon_vec));
@@ -92,7 +94,7 @@ for edges_idx = 1: rows_road
         end
     end
     % update waitbar
-%     waitbar(edges_idx/height(road_network_raw),wbh);
+%     waitbar(edges_idx/height(road_network),wbh);
 end
 % close(wbh);
 end
@@ -122,4 +124,22 @@ function [test_lon,test_lat] = divideEdges(edges,lon_grid,lat_grid)
         end
     end
     test_lon = sort(test_lon); test_lat = sort(test_lat);
+end
+
+function [speed_limits] = getSpeedLimits(road_types)
+%Get speed limit of each road type
+    limitsOfType = containers.Map('KeyType','char','ValueType','double');
+    limitsOfType('tertiary') = 40;
+    limitsOfType('residential') = 30;
+    limitsOfType('primary') = 60;
+    limitsOfType('secondary') = 40;
+    limitsOfType('service') = 30;
+    limitsOfType('trunk') = 90;
+    limitsOfType('unclassified') = 40;
+    limitsOfType('#') = 40;
+    limitsOfType('motorway') = 120;
+    speed_limits = cellfun(@(type) limitsOfType(type),road_types);
+%     for type_idx = 1:length(road_types)
+%         speed_limits(type_idx) = type2limit(road_types(type_idx));
+%     end
 end
