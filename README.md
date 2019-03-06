@@ -20,6 +20,7 @@ There are two sets of input files:
 - gps trajectory files
 
 Format of **road network** file:
+
 EdgeID | Node1ID | Node2ID | Longitude of Node1 | Latitude of Node1 |  Longitude of Node2 | Latitude of Node2 | Road Type
 ---|--- |--- |--- |--- |--- | -- | --
 
