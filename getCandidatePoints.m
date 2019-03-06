@@ -1,4 +1,5 @@
-function [road_ids,candidate_points] = getCandidatePoints(lon,lat,road_network,road_cells,road_ids_all,search_radius,cell_size, grid_size,top_k)
+function [road_ids,candidate_points] = getCandidatePoints(lon,lat,...
+    road_network,road_cells,road_ids_all,search_radius,cell_size, grid_size,top_k)
 %find candidate points within radius r
 % Parameters:
 % lon,lat: longitude and latitude of the point to be searched
